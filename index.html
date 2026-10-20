@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>12-0 Gridiron Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: stadium scoreboard. Three amber reel panels up top, the spun program's depth chart below, your 19-man roster card beside it (stacked on phones). */
+:root{
+  --bg:#0a0a0a; --panel:#151515; --panel2:#1e1e1e; --line:#333333;
+  --chalk:#f2f2f0; --muted:#a6a6a3; --amber:#ffb22e; --amber-ink:#2a1a00; --amber-glow:rgba(255,178,46,.18);
+  --win:#5fd38d; --loss:#ff6f5e; --pit:#000000;
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"DM Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--chalk)}
+body{font-family:var(--body);font-size:15px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px;
+  background-image:repeating-linear-gradient(90deg,transparent 0 59px,rgba(238,241,230,.035) 59px 60px);}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.prow:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.02em}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:12px}
+header.top h1{font-size:clamp(28px,6vw,44px);line-height:1}
+header.top h1 b{color:var(--amber);font-weight:400}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.chip.on{border-color:var(--amber);color:var(--amber)}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-weight:600}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--amber);color:var(--amber-ink);border-color:var(--amber);font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent}
+
+/* home */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.mode{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;text-align:left}
+.mode:hover{border-color:var(--amber)}
+.mode h2{font-size:26px}
+.mode p{margin:0;color:var(--muted);max-width:42ch}
+.mode .go{margin-top:auto;font-family:var(--mono);color:var(--amber);font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h3{font-size:18px;margin-bottom:10px}
+.rules{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.rules b{color:var(--chalk);font-weight:600}
+.best{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.best li{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:8px 10px;background:var(--panel2);border-radius:8px}
+.best .rec{font-family:var(--display);font-size:18px;color:var(--amber)}
+.best .meta{font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{color:var(--muted);font-size:14px}
+
+/* reels */
+.board{background:var(--pit);border:2px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.board-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.reels{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:10px}
+.reel{display:flex;flex-direction:column;gap:6px;min-width:0}
+.window{background:#000;border:1px solid #2a2a1a;border-radius:10px;padding:12px 8px;text-align:center;min-height:62px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);color:var(--amber);font-size:clamp(15px,3.6vw,24px);line-height:1.1;text-shadow:0 0 12px var(--amber-glow),0 0 2px var(--amber);
+  background-image:radial-gradient(rgba(255,178,46,.07) 1px,transparent 1.5px);background-size:5px 5px;overflow:hidden;word-break:break-word}
+.window.spinning{filter:blur(.6px);opacity:.85}
+.reroll{display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.reroll:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.reroll:disabled{opacity:.35;cursor:not-allowed}
+.reroll .n{color:var(--chalk)}
+.pips{display:inline-flex;gap:3px}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.pip.used{background:var(--line)}
+.note{font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+/* draft layout */
+.draft{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.draft{grid-template-columns:1fr}}
+.depth{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.depth-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.depth-head h2{font-size:22px}
+.posgroup{display:flex;flex-direction:column;gap:4px}
+.posgroup .gh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:2px}
+.posgroup .gh span:first-child{font-family:var(--display);font-size:15px}
+.posgroup.closed{opacity:.45}
+.prow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid transparent;text-align:left;width:100%}
+.prow{cursor:pointer}.prow:hover:not(.dis){border-color:var(--muted)}
+.prow.dis{cursor:default;opacity:.5}
+.prow.open{border-color:var(--amber)}
+.pname{font-weight:700;min-width:0}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:2px;border:1px solid var(--amber);color:var(--amber)}
+.badge.C{border-color:var(--chalk);color:var(--chalk)}
+.badge.A{border-color:var(--muted);color:var(--muted)}
+.pstats{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
+.pstats b{color:var(--chalk);font-weight:500}
+.slotpick{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:4px}
+.slotpick .lbl{font-size:12px;color:var(--muted)}
+.slotbtn{background:var(--amber);color:var(--amber-ink);border:0;border-radius:6px;padding:6px 12px;font-weight:800;font-size:13px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* roster */
+.roster{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.roster h2{font-size:22px}
+.side h3{font-size:14px;color:var(--muted);font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.slots{display:flex;flex-direction:column;gap:4px}
+.slot{display:grid;grid-template-columns:46px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:7px;background:var(--panel2);min-height:38px}
+.slot.emptyslot{background:transparent;border:1px dashed var(--line)}
+.slot .sl{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.06em}
+.slot .who{min-width:0;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot .who small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.slot .x{background:transparent;border:1px solid var(--line);border-radius:6px;width:28px;height:28px;color:var(--muted)}
+.slot .x:hover{color:var(--loss);border-color:var(--loss)}
+.slot .ov{font-family:var(--display);color:var(--amber);font-size:17px}
+.progress{height:6px;background:var(--pit);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--amber);transition:width .3s}
+
+/* results */
+.hero{background:var(--pit);border:2px solid var(--line);border-radius:16px;padding:22px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+@media (max-width:640px){.hero{grid-template-columns:1fr}}
+.record{font-family:var(--display);font-size:clamp(64px,16vw,120px);line-height:.9;color:var(--amber);text-shadow:0 0 22px var(--amber-glow)}
+.verdict h2{font-size:clamp(22px,4.5vw,34px)}
+.verdict p{margin:6px 0 0;color:var(--muted);max-width:52ch}
+.grades{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grade{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.grade .g{font-family:var(--display);font-size:34px;line-height:1}
+.grade .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.games{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.games li{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;background:var(--panel2);border-radius:8px;animation:drop .35s ease-out both}
+.games li .wk{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.games li .r{font-family:var(--display);font-size:16px}
+.games li.W .r{color:var(--win)} .games li.L .r{color:var(--loss)}
+.games li.title{grid-column:1/-1;border:1px solid var(--amber)}
+.games li .sc{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:6px}
+@keyframes drop{from{transform:translateY(-6px);opacity:.2}to{transform:none;opacity:1}}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;max-width:80ch}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--amber);color:var(--amber-ink);font-weight:700;padding:10px 16px;border-radius:10px;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- data ---------- */
+const TEAMS=[];
+function T(name,conf,dec){TEAMS.push({name,conf,raw:dec})}
+// Format: each decade is lines "POS Name,stat1,stat2,honor;Name,..."
+// Offense stat1/stat2: QB pass yds/pass TD, RB rush yds/rush TD, WR & TE rec yds/rec TD
+// Defense stat1/stat2: DE DT LB tackles/sacks, CB S tackles/INT
+// Honor: H = Heisman or major national award, C = consensus All-American, A = All-American
+T("Alabama","SEC",{
+80:`QB Walter Lewis,5687,35;Mike Shula,4069,32;David Smith,2988,13;Vince Sutton,1420,7;Ken Coley,980,5
+RB Bobby Humphrey,3420,33,C;Major Ogilvie,1960,25;Kerry Goode,1650,11;Ricky Moore,1520,15;Gene Jelks,1600,9
+WR Jesse Bendross,1790,12;Joey Jones,1386,12;Greg Richardson,1500,9;Marco Battle,1350,8;Al Bell,1100,8
+TE Lamonde Russell,700,5;Howard Cross,600,3;Thornton Chandler,450,3;Bart Krout,350,2;Rob Stewart,300,2
+DE Mike Pitts,170,16,A;Jon Hand,180,14,A;Emanuel King,190,12;Randy Edwards,150,8;Byron Braggs,140,7
+DT Curt Jarvis,190,8;Warren Lyles,200,6;Willie Wyatt,170,5;Larry Rose,160,4;Tim Hughes,140,4
+LB Derrick Thomas,204,52,H;Cornelius Bennett,287,21,C;Keith McCants,200,13,A;E.J. Junior,250,10,A;Thomas Boyd,380,5,A
+CB Jeremiah Castille,170,16,A;John Mangum,180,9;Kermit Kendrick,150,6;Freddie Robinson,120,5;Vantreise Davis,110,4
+S Tommy Wilcox,250,13,A;Rickey Thomas,220,8;Lee Ozmint,130,5;Charles Gilbert,120,4;Hank Crisp,100,3`,
+90:`QB Andrew Zow,5983,36;Jay Barker,5689,26,A;Freddie Kitchens,4668,30;Gary Hollingsworth,4057,26;Brian Burgdorf,2000,12
+RB Shaun Alexander,3565,41,A;Sherman Williams,3000,30;Siran Stacy,2400,20;Dennis Riddle,2100,18;Derrick Lassic,2000,15
+WR David Palmer,1611,15,C;Toderick Malone,2000,12;Michael Vaughn,1600,10;Kevin Lee,1700,10;Curtis Brown,1100,6
+TE Patrick Hape,600,6;Rod Rutledge,350,2;Steve Busky,300,2;Terry Jones,280,2;Jason Wise,250,1
+DE Eric Curry,150,20,C;John Copeland,150,15,C;Dameian Jeffries,140,14;Michael Myers,140,12;Shannon Brown,150,10
+DT Jeremy Nunley,140,12;Chris Hood,150,6;Darrell Blackburn,120,4;James Gregory,130,5;Ozzie Hughes,110,3
+LB Dwayne Rudd,240,10,A;Derrick Oden,330,6;Michael Rogers,260,5;Antonio London,200,10;Ralph Staten,250,4
+CB Antonio Langham,140,19,H;Kevin Jackson,180,10;George Teague,190,9,A;Deshea Townsend,150,6;Fernando Bryant,140,4
+S Kevin Jackson,200,10;Sam Shade,250,7;Tony Johnson,180,6;Willie Gaston,160,5;Ralph Staten,180,3`,
+0:`QB Brodie Croyle,6382,47;Andrew Zow,5983,36;Tyler Watts,3700,22;John Parker Wilson,7924,47;Greg McElroy,2600,17
+RB Glen Coffee,2107,14;Kenneth Darby,3324,19;Shaud Williams,1800,14;Ahmaad Galloway,1800,18;Santonio Beard,1400,10
+WR Julio Jones,1133,4;DJ Hall,2923,17;Tyrone Prothro,1400,8;Freddie Milons,1800,12;Keith Brown,1500,9
+TE Brad Smelley,500,3;Nick Walker,600,4;Travis McCall,400,3;Colin Peek,500,3;Clint Johnston,200,2
+DE Kindal Moorehead,140,13;Wallace Gilberry,200,24,A;Antwan Odom,160,18;Bobby Greenwood,120,8;Lorenzo Washington,130,6
+DT Terrence Cody,90,1,C;Jarret Johnson,200,15;Bobby Greenwood,140,6;Marcell Dareus,40,5;Jeremy Clark,110,4
+LB DeMeco Ryans,300,8,C;Rolando McClain,274,8,H;Saleem Rasheed,230,5;Cornelius Wortham,250,4;Prince Hall,210,3
+CB Javier Arenas,180,10,A;Simeon Castille,170,8;Ramzee Robinson,150,7;Charlie Peprah,180,5;Kareem Jackson,150,4
+S Roman Harper,250,7;Rashad Johnson,260,11,A;Mark Barron,90,7;Charlie Peprah,180,5;Justin Woodall,130,3`,
+10:`QB AJ McCarron,9019,77,A;Jalen Hurts,5626,48;Tua Tagovailoa,7442,87,A;Greg McElroy,4985,30;Jake Coker,3110,21
+RB Derrick Henry,3591,42,H;Mark Ingram,3261,42,H;Trent Richardson,3130,35,C;Najee Harris,3843,46,A;TJ Yeldon,3322,37
+WR Amari Cooper,3463,31,H;DeVonta Smith,3965,46,H;Jerry Jeudy,2742,26,H;Calvin Ridley,2781,19;Julio Jones,2653,15
+TE OJ Howard,1726,7;Irv Smith Jr.,838,10;Michael Williams,300,7;Brian Vogler,200,3;Hale Hentges,200,4
+DE Jonathan Allen,152,28,H;Jonathan Allen,0,0;Tim Williams,60,20;Ryan Anderson,120,19;Anfernee Jennings,170,14
+DT Quinnen Williams,71,8,H;Da'Ron Payne,100,4;A'Shawn Robinson,130,9;Terrence Cody,40,1;Raekwon Davis,170,11
+LB C.J. Mosley,319,6,H;Reuben Foster,200,4,H;Dont'a Hightower,236,8,A;Rashaan Evans,165,9;Reggie Ragland,226,4,A
+CB Dee Milliner,100,6,C;Minkah Fitzpatrick,171,9,H;Marlon Humphrey,81,5;Patrick Surtain II,116,4,C;Dre Kirkpatrick,90,3
+S Mark Barron,235,12,C;Ha Ha Clinton-Dix,160,7,A;Landon Collins,200,5,C;Eddie Jackson,120,9;Xavier McKinney,183,5`,
+20:`QB Mac Jones,6126,56;Bryce Young,8356,80,H;Jalen Milroe,6016,52;Ty Simpson,2800,22;Jalen Hurts,1300,10
+RB Najee Harris,1466,26,C;Jase McClellan,1600,16;Brian Robinson Jr.,1343,14;Jahmyr Gibbs,926,7;Jam Miller,1100,9
+WR DeVonta Smith,1856,23,H;Jameson Williams,1572,15,A;Jaylen Waddle,591,4;Ryan Williams,865,8;Jermaine Burton,1500,12
+TE Cameron Latu,700,8;Jahleel Billingsley,400,4;Miller Forristall,250,2;CJ Dippre,300,2;Amari Niblack,300,4
+DE Will Anderson Jr.,204,34,H;Dallas Turner,140,22,C;Christian Barmore,40,8;Chris Braswell,90,9;LaBryan Ray,80,6
+DT Christian Barmore,60,8;Phidarian Mathis,80,9;Byron Young,100,6;Tim Smith,90,3;D.J. Dale,90,4
+LB Christian Harris,230,10;Dylan Moses,186,4;Henry To'oTo'o,182,5;Deontae Lawson,150,3;Jihaad Campbell,163,6
+CB Patrick Surtain II,95,1,C;Kool-Aid McKinstry,100,3,A;Terrion Arnold,63,5,A;Eli Ricks,40,2;Josh Jobe,90,1
+S Brian Branch,170,3,C;Jordan Battle,240,6;Malachi Moore,190,5;Caleb Downs,107,2;DeMarcco Hellams,200,3`
+});
+T("Georgia","SEC",{
+80:`QB Buck Belue,4249,30;James Jackson,3500,22;John Lastinger,2600,15;Wayne Johnson,2500,14;Greg Talley,2600,14
+RB Herschel Walker,5259,49,H;Lars Tate,3017,36;Tim Worley,2038,23;Rodney Hampton,2668,20;Keith Henderson,1700,13
+WR Lindsay Scott,1500,10;Herman Archie,1100,6;Clarence Kay,700,4;Cassius Osborn,900,5;Fred Lane,800,4
+TE Clarence Kay,500,4;Troy Sadowski,300,2;Barry Bowman,200,1;Ken Sims,150,1;Fred Gibson,150,1
+DE Freddie Gilbert,150,17,A;Jimmy Payne,180,14,A;Richard Tardits,100,29;Mo Lewis,150,6;Bill Stanfill,100,6
+DT Kevin Butler,0,0;Tim Crowe,150,6;Wilbur Strozier,130,4;Brent Collins,120,3;Robert Goggans,110,3
+LB Knox Culpepper,350,4,A;John Brantley,300,4;Tommy Thurson,330,3;Mo Lewis,200,12;Terrie Webster,200,4
+CB Terry Hoage,200,12,C;Jeff Sanchez,150,9;John Little,130,7;Ben Smith,140,10,A;Scott Woerner,170,10,A
+S Terry Hoage,230,12,C;Jeff Sanchez,170,9;Gary Moss,150,6;Tony Flack,140,5;Darryl Jones,130,4`,
+90:`QB Quincy Carter,4700,32;Eric Zeier,11153,67,C;Mike Bobo,5000,38;Hines Ward,1000,5;Greg Talley,2600,14
+RB Garrison Hearst,3232,33,C;Robert Edwards,1800,20;Olandis Gary,1100,10;Terrell Davis,1700,12;Musa Smith,800,6
+WR Hines Ward,1965,11;Terrence Edwards,700,4;Brice Hunter,2300,15;Champ Bailey,1000,5;Andre Hastings,1600,12
+TE Randy Mullen,300,1;Larry Brown,200,2;Jason Dixon,150,1;Brian Sims,200,2;Shawn Allen,150,1
+DE Marcus Stroud,130,7;Mitch Davis,170,7;Richard Seymour,150,6;Phillip Daniels,150,10;Robert Miles,100,6
+DT Richard Seymour,223,6,A;Marcus Stroud,180,5;Bill Goldberg,140,6;Jimmy Lumpkin,120,4;Antonio Cochran,110,3
+LB Kirby Smart,0,0;Brandon Tolbert,330,5;Will Witherspoon,250,5;Whit Marshall,240,4;Morris Lewis,260,4
+CB Champ Bailey,140,8,H;Kirby Smart,140,13,A;Ronald Bailey,160,7;Antonio Cochran,120,4;Jason Jefferies,110,3
+S Kirby Smart,200,13,A;Will Muschamp,160,4;Corey Johnson,150,5;Terreal Bierria,170,6;Tony Gilbert,140,4`,
+0:`QB David Greene,11528,72;Matthew Stafford,7731,51;D.J. Shockley,2500,24;Joe Cox,2500,24;Quincy Carter,1000,6
+RB Knowshon Moreno,2734,30,A;Musa Smith,2202,12;Thomas Brown,2300,20;Danny Ware,1700,12;Kregg Lumpkin,1400,10
+WR A.J. Green,1350,14;Terrence Edwards,3093,30,A;Fred Gibson,2884,20;Mohamed Massaquoi,2282,15;Reggie Brown,1900,13
+TE Ben Watson,700,6;Leonard Pope,1000,10;Martrez Milner,700,6;Tripp Chandler,300,3;Randy McMichael,800,6
+DE David Pollack,281,36,H;Charles Johnson,120,13;Quentin Moses,150,22;Marcus Howard,120,13;Robert Geathers,120,15
+DT Jonathan Sullivan,130,6;Geno Atkins,100,6;Johnathan Sullivan,0,0;Kade Weston,90,3;Jeff Owens,130,4
+LB Odell Thurman,180,4,A;Boss Bailey,200,8;Tony Taylor,260,5;Jarvis Jackson,220,5;Rennie Curran,320,6
+CB Thomas Davis,200,6,A;Tim Jennings,140,5;Paul Oliver,120,6;Asher Allen,120,3;Bruce Thornton,120,5
+S Thomas Davis,200,6,A;Greg Blue,250,8,A;Sean Jones,200,10;Kelin Johnson,180,5;Reshad Jones,170,9`,
+10:`QB Aaron Murray,13166,121;Jake Fromm,8236,78;Jacob Eason,2430,16;Greyson Lambert,2300,15;Hutson Mason,2200,21
+RB Nick Chubb,4769,44,A;Todd Gurley,3285,36,A;Sony Michel,3638,33;D'Andre Swift,2885,20;Isaiah Crowell,850,5
+WR A.J. Green,2619,23,A;Malcolm Mitchell,1900,13;Tavarres King,2600,21;Terry Godwin,1500,12;Mecole Hardman,1200,16
+TE Orson Charles,1300,10;Isaac Nauta,1250,12;Arthur Lynch,900,6;Jay Rome,250,3;Jeb Blazevich,350,3
+DE Jarvis Jones,155,28,C;Leonard Floyd,200,18;Lorenzo Carter,170,14;Justin Houston,140,20;Jordan Jenkins,180,18
+DT John Atkins,120,2;Trenton Thompson,100,5;Jordan Davis,0,0;Garrison Smith,110,4;Kwame Geathers,60,2
+LB Roquan Smith,251,6,H;Alec Ogletree,230,5;Ramik Wilson,280,5;Davin Bellamy,140,13;Tim Kimbrough,180,2
+CB Deandre Baker,140,7,H;Damian Swann,180,8;Brandon Boykin,150,5;Malkom Parrish,130,2;Sanders Commings,130,5
+S Bacarri Rambo,250,16,A;J.R. Reed,240,6,A;Dominick Sanders,200,16;Shawn Williams,240,5;Richard LeCounte,180,6`,
+20:`QB Stetson Bennett,8429,55;Carson Beck,7912,58;JT Daniels,1231,10;Gunner Stockton,2800,22;Jake Fromm,0,0
+RB Kenny McIntosh,1574,12;Zamir White,2556,25;James Cook,1500,13;Kendall Milton,1800,22;Trevor Etienne,1000,14
+WR Ladd McConkey,1687,14;Adonai Mitchell,800,9;George Pickens,1500,14;Dominick Blaylock,500,5;Kearis Jackson,900,4
+TE Brock Bowers,2538,26,H;Darnell Washington,774,3;John FitzPatrick,200,2;Oscar Delp,600,6;Lawson Luckie,200,3
+DE Nolan Smith,140,14;Azeez Ojulari,60,14;Mykel Williams,70,8;Jalen Carter,0,0;Travon Walker,57,7
+DT Jalen Carter,83,9,C;Jordan Davis,91,7,H;Devonte Wyatt,80,5;Nazir Stackhouse,80,2;Warren Brinson,60,3
+LB Nakobe Dean,168,8,H;Jamon Dumas-Johnson,120,5;Smael Mondon,180,5;Channing Tindall,95,9;Quay Walker,120,3
+CB Kelee Ringo,90,4;Derion Kendrick,50,4;Kamari Lassiter,120,2;Daylen Everette,100,3;Eric Stokes,75,4
+S Malaki Starks,170,5,C;Christopher Smith,200,6,H;Lewis Cine,150,1;Javon Bullard,160,3;Tykee Smith,90,4`
+});
+T("LSU","SEC",{
+80:`QB Tommy Hodson,9115,69;Jeff Wickersham,6921,29;Alan Risher,4000,30;Mickey Guidry,1500,8;David Woodley,1200,7
+RB Dalton Hilliard,4050,44,A;Harvey Williams,2860,22;Garry James,2500,25;Sammy Martin,1500,8;Jesse Myles,1300,10
+WR Wendell Davis,3034,19,C;Eric Martin,2625,15;Tony Moss,2400,14;Orlando McDaniel,1100,6;Alvin Lee,600,3
+TE Brian Kinchen,600,5;Willie Williams,500,4;Greg Bales,300,2;Ronnie Haliburton,200,2;Mike Gambrell,200,1
+DE Karl Wilson,150,12;Michael Brooks,280,12,A;Leonard Marshall,200,10;Clint Bush,140,8;Pat Martin,130,6
+DT Henry Thomas,230,13,A;Ramsey Dardar,200,8,A;Greg Jackson,150,5;Clint James,120,4;Kevin Lacy,110,4
+LB Eric Hill,330,8,A;Toby Caston,350,4;Michael Brooks,280,12;Ron Sancho,250,5;Shawn Burks,300,4
+CB Norman Jefferson,130,8;Kevin Guidry,120,6;Chris Carrier,140,10;Greg Jackson,150,6;Ray Martin,110,4
+S Liffort Hobley,220,10;Jeff Wickersham,0,0;Steve Rehage,200,6;Chris Hill,180,5;Gene Lang,150,4`,
+90:`QB Herb Tyler,5876,38;Rohan Davey,4000,26;Jamie Howard,6158,42;Chad Loup,1800,8;Josh Booty,2500,17
+RB Kevin Faulk,4557,46,A;Cecil Collins,800,6;Rondell Mealey,1800,16;Harvey Williams,700,5;Robert Davis,1200,10
+WR Michael Clayton,0,0;Larry Foster,1800,10;Eddie Kennison,1600,13;Abram Booty,1900,15;Wendell Davis,0,0
+TE Ronnie Haliburton,200,2;David LaFleur,1000,8;Jonathan Webb,200,1;Rudy Simon,150,1;Robert Royal,600,6
+DE Gabe Northern,160,22;Anthony McFarland,0,0;Booger McFarland,0,0;Bo Wells,120,8;Larry Smith,100,6
+DT Anthony McFarland,190,14,A;Chuck Wiley,150,6;James Gillyard,100,3;Tanner? ,0,0;Kenny Allen,110,4
+LB Pepper Johnson,0,0;Arnold Miller,200,10;Joe Morgan,250,4;Ron Sancho,0,0;Charles Smith,230,3
+CB Todd Rowe,120,8;Fred Thomas,140,6;Chris Hill,130,5;Jarvis Hensley,100,3;Ryan Clark,130,4
+S Mark Roman,180,5;Clarence LeBlanc,160,6;Ryan Clark,200,3;Greg Hill,140,4;Tory James,120,4`,
+0:`QB JaMarcus Russell,6625,52;Matt Flynn,2407,21;Rohan Davey,3347,18;Matt Mauck,4000,37;Jarrett Lee,2500,23
+RB Joseph Addai,2577,18;Domanick Davis,2300,24;Justin Vincent,2000,22;Jacob Hester,1500,17;Charles Scott,1800,23
+WR Josh Reed,3001,17,H;Dwayne Bowe,2403,26;Michael Clayton,2582,21;Early Doucet,2000,15;Brandon LaFell,1500,12
+TE Richard Dickson,700,9;David Jones,400,3;Keith Zinger,300,2;Eric Edwards,200,2;Robert Royal,300,3
+DE Marcus Spears,170,20,A;Tyson Jackson,150,19;Kirston Pittman,120,12;Melvin Oliver,150,10;Rahim Alem,100,13
+DT Glenn Dorsey,179,13,H;Chad Lavalais,180,13,C;Kyle Williams,140,12;Claude Wroten,90,6;Ricky Jean-Francois,80,4
+LB Bradie James,416,6,A;Ali Highsmith,240,6;Kelvin Sheppard,280,5;Darry Beckwith,200,4;Cameron Vaughn,180,3
+CB Corey Webster,160,16,A;Chevis Jackson,140,8;Jonathan Zenon,100,4;Patrick Peterson,40,2;Travis Daniels,120,5
+S LaRon Landry,315,12,C;Craig Steltz,170,9;Chad Jones,100,5;Jessie Daniels,120,4;Curtis Taylor,110,3`,
+10:`QB Joe Burrow,0,0;Zach Mettenberger,5783,35;Danny Etling,4500,23;Jordan Jefferson,3500,23;Brandon Harris,2600,15
+RB Leonard Fournette,3830,40,C;Derrius Guice,3074,29;Jeremy Hill,1401,18;Clyde Edwards-Helaire,1867,20;Nick Brossette,1600,15
+WR Ja'Marr Chase,2093,23,H;Justin Jefferson,1952,21,A;Odell Beckham Jr.,2340,12;Jarvis Landry,1809,15;Malachi Dupre,1600,13
+TE Thaddeus Moss,600,4;Foster Moreau,600,5;DeSean Smith,500,4;Dillon Gordon,100,1;Travis Dickson,0,0
+DE Barkevious Mingo,110,15;Sam Montgomery,130,19;Arden Key,140,21;Danielle Hunter,140,5;K'Lavon Chaisson,80,9
+DT Michael Brockers,70,2;Bennie Logan,120,4;Davon Godchaux,120,9;Rashard Lawrence,140,9;Drake Nevis,80,6
+LB Devin White,286,9,H;Kevin Minter,190,5;Kendell Beckwith,250,5;Deion Jones,120,6;Jacob Phillips,180,1
+CB Patrick Peterson,140,7,H;Tyrann Mathieu,133,4,H;Tre'Davious White,180,6,A;Morris Claiborne,100,11,H;Greedy Williams,90,8,A
+S Grant Delpit,200,8,H;Jamal Adams,209,5,A;Eric Reid,200,6;Jalen Mills,250,4;Brandon Taylor,120,3`,
+20:`QB Joe Burrow,8565,78,H;Jayden Daniels,6725,57,H;Garrett Nussmeier,6000,46;Max Johnson,2800,24;Myles Brennan,1100,11
+RB Josh Williams,1000,10;Logan Diggs,1000,6;Tyrion Davis-Price,1500,12;Clyde Edwards-Helaire,1414,16;John Emery Jr.,600,6
+WR Malik Nabers,3003,21,C;Brian Thomas Jr.,2000,21;Kayshon Boutte,1800,15;Kyren Lacy,1300,13;Terrace Marshall Jr.,1700,23
+TE Mason Taylor,1300,4;Arik Gilbert,368,2;Kole Taylor,100,1;Thaddeus Moss,570,4;Jack Mashburn,100,1
+DE BJ Ojulari,90,13;Harold Perkins,110,13;Ali Gaye,70,6;Andre Anthony,60,5;Bradyn Swinson,60,8
+DT Mekhi Wingo,100,6;Maason Smith,40,3;Tyler Shelvin,40,0;Neil Farrell Jr.,80,3;Jaquelin Roy,70,3
+LB Harold Perkins,140,8;Damone Clark,135,6;Whit Weeks,120,3;Jacoby Mathews,40,1;Mike Jones Jr.,70,3
+CB Derek Stingley Jr.,80,6,C;Jaire Alexander,0,0;Elias Ricks,40,4;Mekhi Garner,60,2;Zy Alexander,40,2
+S JaCoby Stevens,200,3;Greg Brooks Jr.,90,3;Major Burns,100,3;Todd Harris Jr.,60,2;Jacoby Mathews,80,1`
+});
+T("Florida","SEC",{
+80:`QB Kerwin Bell,7585,56;Wayne Peace,7206,38;Bob Hewko,1100,6;Kyle Morris,1500,8;Rodney Brewer,300,2
+RB Emmitt Smith,3928,36,C;Neal Anderson,3234,32;John L. Williams,2400,17;James Jones,2000,17;Lorenzo Hampton,1700,16
+WR Ricky Nattiel,1800,15;Cris Collinsworth,1900,14;Ray McDonald,1400,8;Ernie Mills,1200,8;Dwayne Dixon,1100,6
+TE Walter Odom,400,2;Chris Bromley,400,3;Mike Mularkey,500,3;Kerry Watkins,200,1;Jeff Swanson,200,1
+DE Alonzo Johnson,180,20,A;Wilber Marshall,343,23,C;Trace Armstrong,100,8;Fernando Jackson,120,8;Tim Newton,130,7
+DT Tim Newton,180,8;Brian Williams,150,5;Robert Brown,110,4;Ed Robinson,120,3;Jeff Roth,110,3
+LB Wilber Marshall,343,23,C;Alonzo Johnson,200,16;David Little,475,5;Scott Armstrong,200,3;Keith Williams,180,2
+CB Jarvis Williams,150,8;Louis Oliver,150,11,A;Richard Fain,140,7;Ricky Easmon,120,6;Adrian White,100,3
+S Louis Oliver,200,11,A;Jarvis Williams,180,8;Adrian White,160,5;Kevin Stabler,120,3;Steve Hope,130,4`,
+90:`QB Danny Wuerffel,10875,114,H;Shane Matthews,9287,74;Doug Johnson,7000,57;Terry Dean,2900,25;Jesse Palmer,2000,15
+RB Errict Rhett,4163,34;Fred Taylor,2394,31;Emmitt Smith,1599,14;Elijah Williams,1100,9;Terry Jackson,1700,25
+WR Jacquez Green,1923,21,C;Reidel Anthony,2200,26,C;Ike Hilliard,2214,29,C;Chris Doering,2107,31;Travis Taylor,2100,24
+TE Erren Kelly,300,2;Tremayne Allen,300,3;Rod Fredrickson,200,2;Kirk Kirkpatrick,300,3;Dee Brown,100,1
+DE Kevin Carter,170,17,C;Jevon Kearse,180,19,C;Alex Brown,150,33;Ellis Johnson,140,11;Mike Peterson,170,8
+DT Ellis Johnson,140,11,A;Brad Culpepper,180,12,C;Gerard Warren,150,8;Reggie Green,120,4;Ed Chester,110,4
+LB Jevon Kearse,180,19,C;Mike Peterson,170,8;Johnny Rutledge,170,4;Ben Hanks,200,4;James Bates,180,3
+CB Fred Weary,100,8;Will White,160,10;Lawrence Wright,190,12,C;Anthony Lott,100,4;Tony George,120,4
+S Lawrence Wright,190,12,C;Will White,160,10;Teako Brown,130,4;Marcus Bevins? ,0,0;Tony George,140,5`,
+0:`QB Tim Tebow,9286,88,H;Rex Grossman,9164,77,H;Chris Leak,11213,88;Jesse Palmer,1000,8;Ingle Martin,500,3
+RB Jeff Demps,2470,23;Ciatrick Fason,2000,22;Earnest Graham,3000,25;DeShawn Wynn,1800,18;Chris Rainey,2000,15
+WR Percy Harvin,1929,13,A;Jabar Gaffney,2375,27,A;Reche Caldwell,1500,15;Taylor Jacobs,1800,13;Dallas Baker,1900,20
+TE Aaron Hernandez,1382,12,H;Ben Troupe,1000,6;Cornelius Ingram,500,6;Tate Casey,200,2;Bryan Fletcher,400,3
+DE Derrick Harvey,130,20;Jarvis Moss,90,17;Carlos Dunlap,90,19;Ray McDonald,120,8;Alex Brown,170,33,A
+DT Marcus Thomas,100,6;Joe Cohen,90,4;Gerard Warren,150,8;Steven Harris,110,4;Lawrence Marsh,80,3
+LB Brandon Spikes,307,6,C;Channing Crowder,190,5;Earl Everett,200,5;Brandon Siler,250,5;Ryan Stamper,180,4
+CB Joe Haden,190,8,A;Lito Sheppard,140,7,A;Keiwan Ratliff,140,13,A;Janoris Jenkins,100,5;Reggie Lewis,100,5
+S Reggie Nelson,100,8,A;Major Wright,170,8;Ahmad Black,250,13;Todd Johnson,280,5;Tony Joiner,170,4`,
+10:`QB Jeff Driskel,4699,23;Kyle Trask,2941,25;Feleipe Franks,4500,32;Treon Harris,1600,12;Will Grier,1200,10
+RB Mike Gillislee,1600,14;Kelvin Taylor,2000,23;Jordan Scarlett,2000,13;Lamical Perine,2400,23;Matt Jones,1100,8
+WR Van Jeffries? ,0,0;Antonio Callaway,1500,10;Van Jefferson,1100,10;Brandon Powell,1500,8;Demarcus Robinson,1700,13
+TE Jordan Reed,950,6;Jake McGee,400,3;DeAndre Goolsby,600,5;Kyle Pitts,1000,8;C'yontai Lewis,300,3
+DE Dante Fowler Jr.,160,14;Jachai Polite,80,13;Sharrif Floyd,70,3;Dominique Easley,60,5;Jonathan Greenard,50,10
+DT Sharrif Floyd,100,7;Dominique Easley,80,6;Taven Bryan,70,5;Caleb Brantley,80,4;Omar Hunter,60,2
+LB Jarrad Davis,200,6;Antonio Morrison,250,5;Jon Bostic,160,6;David Reese,230,2;Ventrell Miller,140,2
+CB Vernon Hargreaves III,140,10,C;Jalen Tabor,100,9,A;Marcus Roberson,90,4;Quincy Wilson,100,6;CJ Henderson,90,6
+S Keanu Neal,180,3;Matt Elam,200,6,A;Marcus Maye,180,3;Chauncey Gardner-Johnson,130,5;Josh Evans,150,2`,
+20:`QB Kyle Trask,4283,43,A;Anthony Richardson,3105,24;Graham Mertz,2900,20;DJ Lagway,1900,12;Emory Jones,2700,19
+RB Montrell Johnson,1900,17;Dameon Pierce,800,13;Malik Davis,900,7;Trevor Etienne,1500,14;Jadarian Price,0,0
+WR Kadarius Toney,984,10;Trevor Pope? ,0,0;Ricky Pearsall,965,4;Justin Shorter,800,3;Jacob Copeland,1000,7
+TE Kyle Pitts,770,12,H;Kevin Austin,0,0;Arik Gilbert,300,2;Dante Zanders,100,1;Keon Zipperer,300,3
+DE Brenton Cox,120,13;Zachary Carter,90,7;Princely Umanmielen,90,10;Khris Bogle,50,4;Antwaun Powell-Ryland,60,6
+DT Gervon Dexter,120,4;Tyrone Truesdell,60,2;Desmond Watson,60,2;Kyree Campbell,60,2;Cam Jackson,40,1
+LB Ventrell Miller,280,7;Amari Burney,180,3;Shemar James,170,3;Scooby Williams,60,1;Mohamoud Diabate,110,3
+CB Kaiir Elam,100,6;Jason Marshall Jr.,100,2;Marco Wilson,90,3;Avery Helm,70,2;Kaiir Elam,0,0
+S Trey Dean III,200,3;Rashad Torrence II,200,4;Kamari Wilson,100,2;Shawn Davis,90,2;Jaydon Hill,70,1`
+});
+T("Texas","SEC",{
+80:`QB Bret Stafford,4800,26;Todd Dodge,3000,13;Peter Gardere,0,0;Rick McIvor,1800,13;Robert Brewer,2100,12
+RB Eric Metcalf,2661,28,A;Jerry Gray,0,0;Edwin Simmons,2000,15;A.J. Jones,2800,23;Darryl Clack,1100,9
+WR Johnny Walker,1500,10;Kelvin Epps,800,5;Tony Jones,900,8;Brian? ,0,0;Herkie Walls,1100,8
+TE Lawrence Sampleton,600,5;Bob Tolar? ,0,0;Bill Allison? ,0,0;Mike Hatchett? ,0,0;Terry Orr? ,0,0
+DE Tony Degrate,190,14,C;Kiki DeAyala,180,22,A;Eric Holle,150,10;Bill Heathcock? ,0,0;Henry Brown,120,6
+DT Steve McMichael,0,0;Tony Degrate,190,14,C;Ray Jackson? ,0,0;Eric Holle,0,0;Ed Williams,130,4
+LB Jeff Leiding,350,6,A;Britt Hager,500,5,A;Ricky Churchman? ,0,0;Mike Vaughn? ,0,0;Brian Jones,200,3
+CB Jerry Gray,180,16,C;Mossy Cade,160,10,A;Stanley Washington? ,0,0;Tony Griffin,120,5;Stanley Richard,180,9
+S Jerry Gray,0,0;Stanley Richard,200,9;Fred Acorn? ,0,0;Mike Hudson? ,0,0;Mossy Cade,0,0`,
+90:`QB James Brown,7638,53;Major Applewhite,8353,60;Peter Gardere,7396,46;Shea Morenz,800,5;Richard Walton,1500,8
+RB Ricky Williams,6279,72,H;Priest Holmes,1276,26;Phil Brown,1900,15;Hodges Mitchell,2000,15;Shon Mitchell,2100,15
+WR Kwame Cavil,2500,15;Mike Adams,2400,22;Wane McGarity,2300,19;Johnny Walker,1600,10;Pat Fitzgerald? ,0,0
+TE Pat Fitzgerald,700,8;Ricky? ,0,0;Steve Bradley? ,0,0;Derek Lewis,700,5;Jason? ,0,0
+DE Shane Dronett,180,17;Tony Brackens,200,26,C;Cory Redding,0,0;Casey Hampton? ,0,0;James Patton,150,9
+DT Casey Hampton,240,12,C;Shane Dronett,0,0;Chris Akins? ,0,0;Stonie Clark? ,0,0;Taylor? ,0,0
+LB Anthony Curl,300,4;Dennis Robinson? ,0,0;Tyson King? ,0,0;Winfred Tubbs,300,3,A;Everett? ,0,0
+CB Bryant Westbrook,140,9,A;Quan Cosby? ,0,0;Taje Allen? ,0,0;Lance Gunn,140,10;Stanley Richard,0,0
+S Lance Gunn,180,10,A;Chris Carter,200,8;Bryan? ,0,0;Greg? ,0,0;Lee Jackson? ,0,0`,
+0:`QB Vince Young,6040,44,H;Colt McCoy,13253,112,C;Chris Simms,7097,59;Major Applewhite,0,0;Chance Mock,1500,13
+RB Cedric Benson,5540,64,H;Jamaal Charles,3328,22;Selvin Young,1500,11;Ivan Williams? ,0,0;Hodges Mitchell,0,0
+WR Jordan Shipley,3191,33,A;Roy Williams,3866,36,A;B.J. Johnson,2600,23;Quan Cosby,2600,14;Limas Sweed,2300,24
+TE David Thomas,1200,12;Bo Scaife,700,5;Jermichael Finley,1000,6;Jermaine? ,0,0;Brandon Pettigrew? ,0,0
+DE Brian Orakpo,140,21,H;Tim Crowder,150,16;Cory Redding,180,20,A;Sergio Kindle,120,20;Lamarr Houston,120,10
+DT Casey Hampton,0,0;Rodrique Wright,170,15;Frank Okam,130,7;Roy Miller,120,6;Marcus Tubbs,120,7
+LB Derrick Johnson,458,10,H;Aaron Harris,320,6;Rashad Bobino,250,4;Sergio Kindle,0,0;Roddrick Muckelroy,250,4
+CB Aaron Ross,170,13,H;Quentin Jammer,180,10,C;Cedric Griffin,200,7;Michael Huff,0,0;Tarell Brown,120,5
+S Michael Huff,316,9,H;Earl Thomas,148,10,C;Michael Griffin,250,9;Nathan Vasher,200,17;Rod Babers,150,7`,
+10:`QB Sam Ehlinger,6000,49;Shane Buechele,4500,32;David Ash,4500,30;Garrett Gilbert,3500,16;Case McCoy,2000,15
+RB Johnathan Gray,2400,23;D'Onta Foreman,3133,33,C;Malcolm Brown,2400,24;Joe Bergeron,1700,23;Keaontay Ingram,1100,9
+WR Devin Duvernay,2100,15;Collin Johnson,2500,15;Lil'Jordan Humphrey,1700,12;Mike Davis,2700,17;Jaxon Shipley,2200,13
+TE Andrew Beck,300,2;Geoff Swaim,100,1;Caleb Bluiett,300,3;Cade Brewer,300,3;Greg Daniels,200,2
+DE Jackson Jeffcoat,170,24,C;Alex Okafor,150,23;Charles Omenihu,120,14;Breckyn Hager,150,9;Malcolm Roach,100,8
+DT Malcom Brown,140,10,C;Poona Ford,140,5;Kheeston Randall,100,5;Hassan Ridgeway,80,7;Chris Nelson,90,4
+LB Malik Jefferson,280,9;Keenan Robinson,300,4;Emmanuel Acho,320,6;Gary Johnson,100,6;Jordan Hicks,260,3
+CB Quandre Diggs,200,11;Carrington Byndom,170,4;Kris Boyd,170,2;Duke Thomas,140,3;Aaron Williams,140,3
+S Kenny Vaccaro,230,5,A;DeShon Elliott,95,6,A;Caden Sterns,140,4;Brandon Jones,200,4;Adrian Phillips,150,2`,
+20:`QB Quinn Ewers,9000,68;Arch Manning,1100,11;Sam Ehlinger,0,0;Casey Thompson,1500,17;Hudson Card,1300,8
+RB Bijan Robinson,3410,33,H;Jonathon Brooks,1139,10;Roschon Johnson,2200,20;CJ Baxter,659,5;Jaydon Blue,1000,12
+WR Xavier Worthy,2755,26,A;Adonai Mitchell,845,11;Jordan Whittington,1500,5;Joshua Moore,1200,14;Matthew Golden,987,9
+TE Ja'Tavion Sanders,1295,7;Gunnar Helm,1000,8;Cade Brewer,200,2;Jared Wiley,100,2;Juan Davis,100,1
+DE Barryn Sorrell,90,10;Ovie Oghoufo,80,6;Colin Simmons,60,9;Ethan Burke,100,7;Trey Moore,40,5
+DT T'Vondre Sweat,90,4,H;Byron Murphy II,90,8;Keondre Coburn,90,4;Vernon Broughton,80,4;Alfred Collins,80,2
+LB DeMarvion Overshown,170,6;Jaylan Ford,250,6,A;Anthony Hill Jr.,170,11;David Gbenda,120,3;Ayodele Adeoye,100,3
+CB Jahdae Barron,140,7,H;Ryan Watts,90,3;Malik Muhammad,100,3;D'Shawn Jamison,90,4;Josh Thompson,100,2
+S Jerrin Thompson,150,4;Michael Taaffe,140,4;Jalen Catalon,90,3;B.J. Foster,90,2;Anthony Cook,120,2`
+});
+T("Oklahoma","SEC",{
+80:`QB Jamelle Holieway,3200,22;J.C. Watts,1400,13;Charles Thompson,1500,10;Danny Bradley,1700,10;Troy Aikman,500,4
+RB Marcus Dupree,1393,13;Joe Washington,0,0;Billy Sims,2200,30,H;Spencer Tillman,2000,15;Lydell Carr,2600,18
+WR Keith Jackson,1470,14,C;Buster Rhymes,700,4;Derrick Shepard,800,5;Mike Ronan? ,0,0;Lee Sharp? ,0,0
+TE Keith Jackson,1470,14,C;Johnny Lewis? ,0,0;Forrest Valora,300,2;Bob? ,0,0;Steve Rhodes? ,0,0
+DE Kevin Murphy,170,20,A;Darrell Reed,170,23,C;Rick Bryan,200,13;Dante Jones,0,0;Troy Johnson? ,0,0
+DT Tony Casillas,213,13,H;Rick Bryan,250,15,C;Dante Williams,0,0;Curtis Mayfield? ,0,0;Richard Reed? ,0,0
+LB Brian Bosworth,395,6,H;Dante Jones,270,6,A;Paul Migliazzo,250,3;Jackie Shipp,400,4,A;Kert Kaspar? ,0,0
+CB Rickey Dixon,160,16,H;Scott Case,0,0;Sonny Brown,150,8;Derrick Shepard,0,0;David Vickers,120,5
+S Scott Case,150,6;Keith Stanberry,150,7;Kevin Thompson,140,6;David Vickers,0,0;Eric Mitchel,120,4`,
+90:`QB Cale Gundy,6142,33;Eric Moore? ,0,0;Josh Heupel,7456,53,A;Garrick McGee,1200,7;Justin Fuente? ,0,0
+RB De'Mond Parker,3400,22;James Allen,2000,12;Mike Gaddis,2600,17;Jerald Moore,2000,22;Dennis McKinnley? ,0,0
+WR Antwone Savage,1300,8;Josh Norman,700,5;P.J. Mays,800,5;Andre Woolfolk,1000,5;Mark Clayton,0,0
+TE Trent Smith,500,6;Stephen Alexander,1200,10;Willie? ,0,0;Rod? ,0,0;Mark? ,0,0
+DE Cedric Jones,200,30,C;Lamar? ,0,0;Mike? ,0,0;Kelvin Hunt? ,0,0;Corey Callens? ,0,0
+DT Tommie Harris,0,0;Dennis Lee? ,0,0;Sam Mitchell? ,0,0;Jeff Jerkins? ,0,0;Lamont? ,0,0
+LB Rocky Calmus,380,9,H;Ted? ,0,0;Torrance Marshall,200,6;Robert? ,0,0;Aubrey Beavers? ,0,0
+CB Derrick Strait,0,0;Michael Thompson? ,0,0;Darrell Walker? ,0,0;Mike? ,0,0;Andre? ,0,0
+S Roy Williams,0,0;Michael Thompson? ,0,0;Mike? ,0,0;Brandon? ,0,0;Josh? ,0,0`,
+0:`QB Jason White,8012,81,H;Sam Bradford,8403,88,H;Josh Heupel,3800,30,A;Paul Thompson,2500,22;Nate Hybl,2400,14
+RB Adrian Peterson,4045,41,C;DeMarco Murray,3685,50;Quentin Griffin,3900,40;Kejuan Jones,1800,22;Allen Patrick,1300,9
+WR Mark Clayton,3241,31,C;Ryan Broyles,1100,14;Malcolm Kelly,2300,24;Juaquin Iglesias,2400,19;Travis Wilson,1700,13
+TE Jermaine Gresham,1500,25,A;Trent Smith,1000,14;Brody Eldridge,300,4;Joe Jon Finley,700,6;Bubba Moses? ,0,0
+DE Dan Cody,200,24,A;Jonathan Jackson? ,0,0;Larry Birdine,130,10;Auston English,140,24;Frank Alexander,0,0
+DT Tommie Harris,180,13,H;Gerald McCoy,120,15,C;DeMarcus Granger,100,6;Dusty Dvoracek,180,17;Lynn McGruder? ,0,0
+LB Teddy Lehman,400,7,H;Rocky Calmus,0,0;Rufus Alexander,350,8,A;Curtis Lofton,200,4,C;Torrance Marshall,0,0
+CB Derrick Strait,250,12,H;Andre Woolfolk,150,7;Reggie Smith,180,8;Marcus Walker,120,5;Dominique Franks,100,5
+S Roy Williams,250,6,H;Brandon Everage,200,7;Nic Harris,300,6;Lendy Holmes,150,7;Jason Carter? ,0,0`,
+10:`QB Baker Mayfield,12292,119,H;Kyler Murray,4361,42,H;Landry Jones,16646,123;Trevor Knight,3800,27;Jalen Hurts,3851,32
+RB Joe Mixon,2027,15;Samaje Perine,4122,49,A;Rodney Anderson,1300,13;Kennedy Brooks,2500,23;Trey Sermon,2000,22
+WR CeeDee Lamb,3292,32,C;Dede Westbrook,2700,23,H;Sterling Shepard,3482,26,A;Marquise Brown,2413,17,A;Ryan Broyles,4586,45,C
+TE Mark Andrews,1765,22,H;Grant Calcaterra,700,7;Dimitri Flowers,600,5;Trent Ratterree? ,0,0;Brody Eldridge,0,0
+DE Ronnell Lewis,120,9;Charles Tapper,150,11;Eric Striker,170,17;Ogbonnia Okoronkwo,140,17;Frank Alexander,170,15
+DT Gerald McCoy,0,0;Jordan Phillips,80,2;Neville Gallimore,120,9;Chuka Ndulue,120,7;Matthew Romar? ,0,0
+LB Kenneth Murray,300,9,A;Dominique Alexander,320,6;Travis Lewis,440,6;Tom Wort,200,5;Jordan Evans,280,4
+CB Zack Sanchez,170,15,A;Jordan Thomas,140,6;Aaron Colvin,220,4;Demontre Hurst,170,3;Parnell Motley,180,6
+S Tony Jefferson,250,7;Javon Harrison? ,0,0;Steven Parker,250,7;Ahmad Thomas,250,2;Pat Fields,0,0`,
+20:`QB Spencer Rattler,4595,40;Dillon Gabriel,3660,30;Jackson Arnold,1500,12;Caleb Williams,1912,21;Jalen Hurts,0,0
+RB Kennedy Brooks,1253,13;Eric Gray,1366,11;Rhamondre Stevenson,665,7;Tawee Walker,700,5;Jovantae Barnes,1100,9
+WR Marvin Mims,2398,20;Drake Stoops,2000,15;Jadon Haselwood,1000,9;Nic Anderson,1000,10;Charleston Rambo,800,6
+TE Austin Stogner,600,6;Brayden Willis,800,8;Jason Llewellyn,200,2;Bauer Sharp,100,1;Kaden Helms,50,0
+DE Nik Bonitto,90,15,A;Isaiah Thomas,70,8;Ronnie Perkins,70,10;Ethan Downs,90,8;Reggie Grimes,70,5
+DT Perrion Winfrey,60,5;Jalen Redmond,90,9;Jordan Kelley,60,3;Gracen Halton,60,4;Jonah Laulu,50,3
+LB Danny Stutsman,370,6,A;Brian Asamoah,180,4;DaShaun White,200,4;Kip Lewis,60,1;Caleb Kelly,60,2
+CB Billy Bowman Jr.,150,9;Woodi Washington,170,4;Gentry Williams,90,1;Jaden Davis,80,1;Joshua Eaton,80,1
+S Pat Fields,200,3;Key Lawrence,150,1;Delarrin Turner-Yell,200,2;Robert Spears-Jennings,100,2;Peyton Bowen,60,1`
+});
+T("Tennessee","SEC",{
+80:`QB Tony Robinson,3300,21;Alan Cockrell,2900,17;Jeff Francis,5600,31;Andy Kelly,0,0;Daryl Dickey,1900,12
+RB Reggie Cobb,2000,20;Johnnie Jones,2900,15;Chuck Webb,1300,12;Johnny Jones,0,0;Charles Wilson,1500,12
+WR Willie Gault,1600,10;Tim McGee,2042,15,C;Anthony Hancock,1500,8;Joey Clinkscales,1300,8;Alvin Harper,0,0
+TE Glenn? ,0,0;Mark Adams? ,0,0;Kevin Hamm? ,0,0;Jeff Smith? ,0,0;Mike Gaddis? ,0,0
+DE Reggie White,293,32,C;Kelly Ziegler? ,0,0;Chris White? ,0,0;Mark Hovanic? ,0,0;Marion Hobby? ,0,0
+DT Mike Cofer? ,0,0;Reggie White,0,0;Mark Hovanic? ,0,0;Robert? ,0,0;Darryl? ,0,0
+LB Keith DeLong,450,4,C;Alvin Toles,370,4,A;Dale Jones,250,3;Darrin Miller,200,2;Kurt Crain? ,0,0
+CB Bill Bates,0,0;Terry McDaniel,100,6;Dennis Paul,0,0;Preston Warren? ,0,0;Chris White? ,0,0
+S Bill Bates,250,10;Chris White? ,0,0;Mark? ,0,0;Charles Davis? ,0,0;Dennis Paul? ,0,0`,
+90:`QB Peyton Manning,11201,89,H;Heath Shuler,4089,36,A;Tee Martin,4592,32;Andy Kelly,6400,36;Jerry Colquitt,600,3
+RB Jamal Lewis,2677,17;Travis Henry,3078,29;Charlie Garner,1600,10;James Stewart,2900,32;Jay Graham,2600,20
+WR Peerless Price,2600,21;Carl Pickens,1200,13,A;Joey Kent,2814,25;Alvin Harper,1500,16;Marcus Nash,2000,15
+TE Jeff Smith? ,0,0;Ricky? ,0,0;John Finch? ,0,0;Mark Levine? ,0,0;Eric Lane? ,0,0
+DE Leonard Little,130,14,A;Shaun Ellis,140,13;Chuck Smith,150,12;Steve Johnson? ,0,0;Corey Terry? ,0,0
+DT John Henderson,0,0;Darwin Walker,130,10;Jeff? ,0,0;Billy Ratliff,150,7;Ron? ,0,0
+LB Al Wilson,250,4,C;Raynoch Thompson,250,5;Dale Carter,0,0;Ben Talley? ,0,0;Tyrone Hines? ,0,0
+CB Dale Carter,150,8,C;Terry Fair,140,5;Deon Grant,0,0;Dwayne Goodrich,140,4;Andre Lott? ,0,0
+S Deon Grant,180,12,A;Jason Parker? ,0,0;Raymond Austin? ,0,0;Steve Johnson? ,0,0;Fred White? ,0,0`,
+0:`QB Erik Ainge,8700,72;Casey Clausen,9707,75;Jonathan Crompton,4000,32;Rick Clausen,1700,9;Brent Schaeffer? ,0,0
+RB Travis Henry,1500,13;Gerald Riggs Jr.,1800,12;Cedric Houston,2400,18;Arian Foster,2964,22;Montario Hardesty,2300,22
+WR Robert Meachem,2200,17;Donte Stallworth,1700,17;Kelley Washington,1800,8;Jayson Swain,1700,12;Lucas Taylor,1000,6
+TE Jason Witten,700,7;Chris Brown,400,4;Brad Cottam,300,2;Luke Stocker,500,7;Jeff Cottam,100,1
+DE John Henderson,0,0;Parys Haralson,150,19;Will Overstreet,140,15;Xavier Mitchell,120,11;Robert Ayers,100,7
+DT John Henderson,140,17,H;Albert Haynesworth,120,7;Justin Harrell,120,6;Dan Williams,90,4;Jesse Mahelona,140,8
+LB Jerod Mayo,300,4,A;Kevin Simon,280,5;Eric Berry,0,0;Rico McCoy,300,3;Kevin Burnett,250,6
+CB Jason Allen,250,9,A;Jonathan Wade,120,4;Inky Johnson,90,2;Jabari Greer,120,4;Antwan Stewart? ,0,0
+S Eric Berry,245,14,H;Jason Allen,0,0;Jonathan Hefney,250,9,A;Rashad Baker,180,5;Corey Campbell? ,0,0`,
+10:`QB Joshua Dobbs,7138,53;Tyler Bray,7444,69;Jarrett Guarantano,5000,26;Justin Worley,3000,22;Matt Simms,1500,8
+RB Alvin Kamara,1294,16;Jalen Hurd,2638,20;Rajion Neal,1500,13;Tauren Poole,1800,11;Ty Chandler,1800,9
+WR Justin Hunter,2000,18;Josh Palmer,1400,7;Jauan Jennings,2200,15;Da'Rick Rogers,1000,9;Cordarrelle Patterson,778,5
+TE Mychal Rivera,1100,8;Ethan Wolf,1100,6;Dominick Wood-Anderson,300,2;Jason Croom,300,2;Brandon Ward? ,0,0
+DE Derek Barnett,200,33,C;Curt Maggitt,140,15;Kyle Phillips,130,10;Corey Miller,100,6;Jonathan Kongbo,70,4
+DT Danny O'Brien,80,5;Kahlil McKenzie,60,2;Shy Tuttle,100,4;Daniel McCullers,80,1;Maurice Couch,60,2
+LB A.J. Johnson,425,6;Jalen Reeves-Maybin,300,6;Darrin Kirkland Jr.,140,2;Daniel Bituli,280,2;Herman Lathers,200,3
+CB Cameron Sutton,200,6;Justin Coleman,140,2;Emmanuel Moseley,120,2;Prentice McKinney? ,0,0;Bryce Thompson,100,4
+S Todd Kelly Jr.,180,5;Brian Randolph,250,8;Micah Abernathy,200,4;Nigel Warrior,200,6;Byron Moore,150,3`,
+20:`QB Hendon Hooker,6080,58,A;Nico Iamaleava,2600,19;Joe Milton III,3700,30;Jarrett Guarantano,0,0;Harrison Bailey,600,4
+RB Jaylen Wright,2300,14;Dylan Sampson,2500,30,A;Jabari Small,2200,27;Tiyon Evans,700,8;Eric Gray,700,4
+WR Jalin Hyatt,1405,16,H;Cedric Tillman,1800,17;Bru McCoy,1100,6;Velus Jones Jr.,800,7;Squirrel White,1000,6
+TE Jacob Warren,500,6;Princeton Fant,400,4;McCallan Castles,300,2;Miles Kitselman,200,3;Ethan Davis,100,1
+DE Byron Young,150,13;Jalen McKenzie? ,0,0;James Pearce Jr.,90,17,A;Tyler Baron,100,6;Josh Josephs,60,4
+DT Omari Thomas,120,4;Bryson Eason,80,3;Elijah Simmons,40,2;Matthew Butler,100,5;Omarr Norman-Lott,40,6
+LB Jeremy Banks,200,6;Aaron Beasley,170,3;Henry To'oTo'o,0,0;Keenan Pili,120,1;Arion Carter,100,1
+CB Jaylen McCollough,100,4;Alontae Taylor,120,2;Kamal Hadden,50,3;Jourdan Thomas,60,1;Christian Charles,60,1
+S Trevon Flowers,150,3;Jaylen McCollough,180,5;Theo Jackson,160,3;Andre Turrentine,60,1;Tamarion McDonald,80,1`
+});
+T("Auburn","SEC",{
+80:`QB Pat Sullivan,0,0;Reggie Slack,3000,17;Jeff Burger,4700,30;Randy Campbell,2500,12;Pat Washington,2000,10
+RB Bo Jackson,4303,43,H;Brent Fullwood,2789,18,A;Tommie Agee,1600,10;Lionel James,2100,9;James Joseph,1500,10
+WR Lawyer Tillman,2000,11;Alexander Wright,1100,8;Freddie Weygand,1000,6;Trey Gainous,1300,6;Chris Woods? ,0,0
+TE Walter Reeves,700,5;Ed West,500,4;Jim Lathram? ,0,0;Greg? ,0,0;Steve Wallace? ,0,0
+DE Tracy Rocker,0,0;Gerald Robinson,150,14;Ron Stallworth,140,10;Doug Smith? ,0,0;Benji Roland? ,0,0
+DT Tracy Rocker,354,21,H;Ben Tamburello? ,0,0;Benji Roland,150,10;Gregg Carr,0,0;Ron? ,0,0
+LB Aundray Bruce,250,15,A;Gregg Carr,400,9,C;Craig Stewart? ,0,0;Quency Williams? ,0,0;Kurt Crain,300,4
+CB Kevin Porter,170,7,A;Tom Powell? ,0,0;Bob Harris? ,0,0;Carlo Cheattom? ,0,0;Smokey Hodge? ,0,0
+S Bob Harris,180,5;Craig Ogletree? ,0,0;Tommy? ,0,0;Smokey? ,0,0;Mike? ,0,0`,
+90:`QB Stan White,8016,40;Patrick Nix,4000,27;Dameyune Craig,3900,25;Ben Leard,4500,28;Reggie Slack,0,0
+RB James Bostic,2400,22;Stephen Davis,2800,32;Rudi Johnson,1567,13;Fred Beasley? ,0,0;Joe Cribbs? ,0,0
+WR Frank Sanders,2200,17;Karsten Bailey,2000,14;Willie Gosha,1500,10;Thomas Bailey,1600,14;Robert Baker? ,0,0
+TE Fred Beasley? ,0,0;Andy Fuller,500,5;Robert? ,0,0;Hayward? ,0,0;Lorenzo? ,0,0
+DE Gary Walker,140,9;Willie Whitehead,150,15;Takeo Spikes,0,0;Leonard? ,0,0;Mark? ,0,0
+DT Damon Duval? ,0,0;Charles Dorsey? ,0,0;Mike Pelton? ,0,0;Jimmy Brumbaugh,150,8;Gary Walker,0,0
+LB Takeo Spikes,280,6,A;Anthony Harris,250,5;Darrell? ,0,0;Marcellus Mostella? ,0,0;Jason? ,0,0
+CB Brian Robinson,200,10,A;Fred? ,0,0;Chris? ,0,0;Jayson Bray? ,0,0;Martavious? ,0,0
+S Brian Robinson,0,0;Martavious Houston,200,6;Rob Pate? ,0,0;Larry? ,0,0;Jimmy? ,0,0`,
+0:`QB Jason Campbell,7299,45;Brandon Cox,6400,38;Chris Todd,2600,22;Kodi Burns,1000,7;Ben Leard,0,0
+RB Carnell Williams,3831,45,A;Ronnie Brown,2707,27;Kenny Irons,2300,17;Ben Tate,3321,24;Brad Lester,1500,15
+WR Courtney Taylor,1700,8;Ben Obomanu,1300,8;Rod Smith,0,0;Devin Aromashodu,1500,10;Darvin Adams,1600,13
+TE Cole Bennett? ,0,0;Robert Johnson? ,0,0;Gabe McCullough? ,0,0;Tommy Trott,300,2;Cooper Wallace? ,0,0
+DE Quentin Groves,150,26,A;Bret Eddins? ,0,0;Antonio Coleman,130,23;Stanley McClover,90,18;Reggie Torbor? ,0,0
+DT DeMarcus Ware? ,0,0;Spencer Johnson,90,4;Josh Thompson? ,0,0;Sen'Derrick Marks,100,4;Tommy Jackson? ,0,0
+LB Karlos Dansby,250,10;Travis Williams,250,5;Kevin Sears? ,0,0;Josh Bynes,200,3;Merrill Johnson? ,0,0
+CB Carlos Rogers,140,6,H;Jerraud Powers,120,4;Montae Pitts? ,0,0;Walt McFadden,120,4;Junior Rosegreen,0,0
+S Junior Rosegreen,160,9,A;Will Herring,190,6;Zac Etheridge,150,3;Patrick Lee? ,0,0;Steve Gandy? ,0,0`,
+10:`QB Cam Newton,2854,30,H;Nick Marshall,4508,34;Jarrett Stidham,5952,36;Bo Nix,0,0;Kiehl Frazier,700,4
+RB Tre Mason,2335,32,A;Kerryon Johnson,2494,32;Michael Dyer,2600,10;Cameron Artis-Payne,2000,15;JaTarvious Whitlow,1100,7
+WR Sammie Coates,2240,17;Darius Slayton,1800,15;Ryan Davis,1200,4;Emory Blake,1800,13;Duke Williams,800,5
+TE Philip Lutzenkirchen,600,14;C.J. Uzomah,250,6;Jalen Harris,200,2;Spencer Nigh? ,0,0;Brandon Fulse? ,0,0
+DE Dee Ford,120,20;Carl Lawson,120,14;Marlon Davidson,150,15;Nick Fairley,0,0;Corey Lemonier,110,17
+DT Nick Fairley,60,12,H;Derrick Brown,150,8,H;Montravius Adams,150,10;Dontavius Russell,130,4;Gabe Wright,90,4
+LB Kris Frost,180,2;Cassanova McKinzy,200,3;Tre Williams,160,2;Deshaun Davis,250,4;Darrell Williams,140,2
+CB Carlton Davis,130,4;Jonathan Jones,140,7;Noah Igbinoghene,80,1;Chris Davis,140,4;Javaris Davis,110,2
+S Rudy Ford,140,2;Jermaine Whitehead,170,6;Tray Matthews,180,2;Johnathan Ford,180,2;Jamel Dean,0,0`,
+20:`QB Bo Nix,7251,39;Payton Thorne,2000,14;Jackson Arnold,0,0;Robby Ashford,1500,9;T.J. Finley,1000,8
+RB Tank Bigsby,2903,25;Jarquez Hunter,2800,18;Jarquez Hunter,0,0;Damari Alston,700,5;Shaun Shivers,600,3
+WR Kobe Hudson,1200,6;Cam Taylor? ,0,0;Seth Williams,1500,12;Anthony Schwartz,800,5;Shedrick Jackson,600,4
+TE John Samuel Shenker,600,4;Rivaldo Fairweather,400,3;Tyler Fromm? ,0,0;Brandon Frazier,100,2;Luke Deal,100,1
+DE Colby Wooden,150,11;T.D. Moultry,70,8;Keldric Faulk,80,4;Big Kat Bryant,80,7;Elijah McAllister,50,1
+DT Derick Hall,150,18;Marquis Burks? ,0,0;Mosiah Nasili-Kite,40,2;Tobias Larry? ,0,0;Jayden Peevy,70,2
+LB Owen Pappoe,200,4;Zakoby McClain,250,4;Eugene Asante,150,4;Cam Riley,120,2;Austin Keys,60,2
+CB Roger McCreary,150,4,A;Nehemiah Pritchett,120,2;D.J. James,100,2;Keionte Scott,50,1;Jaylin Simpson,90,3
+S Smoke Monday,170,3;Jordyn Peters,90,5;Cayden Bridges? ,0,0;Zion Puckett,90,1;Donovan Kaufman,90,2`
+});
+T("Ohio State","Big Ten",{
+80:`QB Art Schlichter,7547,50,A;Jim Karsatos,4700,32;Mike Tomczak,5500,26;Greg Frey,6316,37;Kent Graham,600,3
+RB Keith Byars,3200,46,C;Carlos Snow,2900,23;Vince Workman,1900,15;Tim Spencer,3553,27;Calvin Murray,2400,20
+WR Cris Carter,2725,27,A;Gary Williams,2800,16;Doug Donley,2252,15;Jeff Graham,1800,12;Thad Jemison,1400,9
+TE John Frank,1400,8;Jeff Ellis,500,3;Ed Taggart,300,2;Jim Lachey,0,0;Mike Lanese,700,5
+DE Eric Kumerow,200,20;Jim Laughlin,180,9;Pepper Johnson,0,0;Derek Isaman,200,7;Byron Lee,250,9
+DT Jerome Foster,180,12;Mark Smith,200,8;Henry Brown,150,5;Michael Sullivan,120,5;Mike D'Andrea,100,4
+LB Chris Spielman,546,10,H;Pepper Johnson,380,6,A;Marcus Marek,572,9,A;Tom Cousineau,0,0;Glen Cobb,300,4
+CB William White,200,16,A;Garcia Lane,150,8;David Brown,170,9,A;Shaun Gayle,150,7;Sonny Gordon,140,6
+S Sonny Gordon,220,9;Todd Bell,200,8;Mike Sullivan? ,0,0;Terry White,180,6;Zack Dumas,150,5`,
+90:`QB Bobby Hoying,7232,57;Joe Germaine,6370,56,A;Kirk Herbstreit,1600,6;Stanley Jackson,2000,13;Greg Frey,0,0
+RB Eddie George,3768,44,H;Robert Smith,2200,19;Raymont Harris,2600,22;Pepe Pearson,2400,22;Michael Wiley,1300,10
+WR Terry Glenn,1825,17,H;Joey Galloway,2219,19;David Boston,2855,34,C;Dee Miller,1700,14;Ken-Yon Rambo,1000,7
+TE Rickey Dudley,1000,12;John Lumpkin,400,4;D.J. Jones,300,2;Steve? ,0,0;Jeff? ,0,0
+DE Mike Vrabel,184,36,A;Matt Finkes,190,25;Dan Wilkinson,0,0;Jason Simmons? ,0,0;Alonzo Spellman,150,11
+DT Dan Wilkinson,120,10,A;Luke Fickell,250,9;Jerry Rudzinski? ,0,0;Winfield Garnett,150,6;Ryan Pickett,120,6
+LB Andy Katzenmoyer,232,18,H;Steve Tovar,400,9,A;Lorenzo Styles,250,6;Na'il Diggs,280,9;Greg Bellisari,280,5
+CB Shawn Springs,150,8,A;Antoine Winfield,300,7,H;Ahmed Plummer,160,8;Nate Clements,140,8;Ty Howard,120,4
+S Damon Moore,280,9,A;Rob Kelly,250,6;Tito Paul,200,4;Gary Berry,150,5;Mike Doss,0,0`,
+0:`QB Troy Smith,5720,54,H;Terrelle Pryor,0,0;Craig Krenzel,4500,30;Todd Boeckman,2700,25;Steve Bellisari,4600,26
+RB Chris Wells,3382,30;Maurice Clarett,1237,18;Antonio Pittman,2400,21;Lydell Ross,2300,20;Jonathan Wells,2100,25
+WR Ted Ginn Jr.,2140,25;Santonio Holmes,2295,25;Anthony Gonzalez,1900,14;Michael Jenkins,2898,16;Brian Robiskie,1900,20
+TE Ben Hartsock,400,3;Rory Nicol,200,2;Jake Ballard,300,2;Ryan Hamby,300,4;Jake Stoneburner,0,0
+DE Vernon Gholston,150,22;Will Smith,170,23,A;Cameron Heyward,0,0;Simon Fraser,130,16;Thaddeus Gibson,90,10
+DT Quinn Pitcock,160,15,A;Tim Anderson,150,8;Doug Worthington,100,4;David Patterson,120,5;Ryan Pickett,0,0
+LB A.J. Hawk,394,16,H;James Laurinaitis,375,13,H;Bobby Carpenter,250,10;Anthony Schlegel,170,5;Matt Wilhelm,250,7,A
+CB Malcolm Jenkins,150,11,H;Chris Gamble,120,8,A;Donte Whitner,0,0;Ashton Youboty,140,7;Dustin Fox,180,5
+S Mike Doss,330,8,C;Donte Whitner,180,3;Kurt Coleman,200,7;Nate Salley,220,6;Kurtis? ,0,0`,
+10:`QB J.T. Barrett,9434,104,A;Dwayne Haskins,5396,54,A;Braxton Miller,5295,52;Cardale Jones,1600,9;Terrelle Pryor,6177,57
+RB Ezekiel Elliott,3961,43,A;J.K. Dobbins,4459,43,A;Carlos Hyde,3198,37;Mike Weber,2700,24;Boom Herron,2500,28
+WR Michael Thomas,1602,18;Parris Campbell,1768,13;Terry McLaurin,1200,19;K.J. Hill,2300,17;DeVier Posey,1900,14
+TE Jeff Heuerman,800,7;Marcus Baugh,600,8;Nick Vannett,500,5;Luke Farrell,300,2;Jake Stoneburner,700,13
+DE Joey Bosa,148,26,H;Nick Bosa,77,17,H;Chase Young,98,30,H;Tyquan Lewis,110,23;Sam Hubbard,120,17
+DT Michael Bennett,150,13;Dre'Mont Jones,100,9;Adolphus Washington,120,7;Tommy Schutt,100,6;Johnathan Hankins,120,5
+LB Ryan Shazier,317,15,A;Raekwon McMillan,275,6,A;Darron Lee,150,11;Joshua Perry,270,5;Malik Harrison,200,5
+CB Denzel Ward,110,2,C;Marshon Lattimore,60,4;Eli Apple,80,2;Bradley Roby,170,8,A;Jeff Okudah,60,3,C
+S Malik Hooker,74,7,C;Vonn Bell,200,9;Tyvis Powell,180,6;C.J. Barnett,180,5;Jordan Fuller,250,5`,
+20:`QB C.J. Stroud,8123,85,A;Justin Fields,5373,63,A;Kyle McCord,3200,24;Will Howard,4000,35;Julian Sayin,3500,30
+RB TreVeyon Henderson,4000,45;Master Teague,1100,15;Miyan Williams,1200,15;Quinshon Judkins,1100,14;Trey Sermon,870,4
+WR Marvin Harrison Jr.,2613,31,H;Garrett Wilson,2213,23,A;Chris Olave,2711,35,A;Jaxon Smith-Njigba,1698,9,A;Emeka Egbuka,2800,24
+TE Cade Stover,1300,10;Jeremy Ruckert,600,12;Luke Farrell,0,0;Gee Scott Jr.,200,2;Max Klare,400,2
+DE Jack Sawyer,150,18;JT Tuimoloau,170,21,A;Zach Harrison,140,10;Tyreke Smith,60,6;Javontae Jean-Baptiste,50,3
+DT Haskell Garrett,110,8;Tyleik Williams,100,7;Mike Hall Jr.,60,6;Taron Vincent,60,3;Ty Hamilton,70,3
+LB Tommy Eichenberg,250,4,A;Cody Simon,150,7;Steele Chambers,180,3;Pete Werner,180,2;Baron Browning,110,5
+CB Denzel Burke,180,1;Shaun Wade,90,4,A;Cameron Brown,90,2;Jahdae Barron,0,0;Davison Igbinosun,100,3
+S Caleb Downs,80,2,C;Lathan Ransom,200,4;Ronnie Hickman,180,2;Josh Proctor,80,1;Sonny Styles,80,2`
+});
+T("Michigan","Big Ten",{
+80:`QB Jim Harbaugh,5449,31;Michael Taylor,3500,19;Steve Smith,4800,42;Demetrius Brown,2600,15;Jim Harbaugh,0,0
+RB Jamie Morris,4393,25;Butch Woolfolk,3850,18;Tony Boles,1600,12;Leroy Hoard,1700,20;Lawrence Ricks,2000,12
+WR Anthony Carter,3076,37,C;Greg McMurtry,1700,10;John Kolesar,1400,12;Chris Calloway,900,4;Vince Bean,600,4
+TE Eric Kattus,800,4;Craig Dunaway,400,3;Jeff Brown,300,2;Derrick Walker,500,5;Sim Nelson,200,1
+DE Mark Messner,250,36,C;Mike Hammerstein,190,12,A;Mike Teeter,180,10;Al Sincich,150,6;Billy Harris,120,4
+DT Mike Hammerstein,0,0;Mark Messner,0,0;Dave Folkertsma,140,4;Tim Williams,130,4;Mike Evans,120,3
+LB Andy Moeller,350,4;Mike Mallory,450,5,A;Erik Campbell,0,0;Ron Simpkins,0,0;J.J. Grant,300,3
+CB Garland Rivers,150,8,A;Brad Cochran,180,9,A;Tripp Welborne,0,0;Keith Bostic,170,10;Erik Campbell,180,6
+S Tripp Welborne,250,7,C;Keith Bostic,0,0;Doug Mallory,200,5;Tony Gant,180,7;Brian Mercer? ,0,0`,
+90:`QB Elvis Grbac,5859,71,A;Tom Brady,4773,30;Brian Griese,5000,30;Todd Collins,4500,32;Scott Dreisbach,3000,18
+RB Tyrone Wheatley,4178,47,A;Ricky Powers,2000,15;Tim Biakabutuka,2810,24;Anthony Thomas,4472,55;Jesse Johnson,1000,8
+WR Desmond Howard,2146,32,H;Amani Toomer,2657,18;David Terrell,2317,23;Tai Streets,2300,19;Derrick Alexander,1900,22
+TE Jerame Tuman,900,11;Tony McGee,500,6;Jay Riemersma,800,7;Mark Campbell,400,4;Aaron Shea,600,3
+DE Glen Steele,150,19;James Hall,120,11;Rob Swett? ,0,0;Chris Hutchinson,160,15,C;Trent Zenkewicz? ,0,0
+DT Rob Renes,150,10;William Carr,190,12,C;Josh Williams,150,6;Chris Hutchinson,0,0;Ninef Aghakhan? ,0,0
+LB Sam Sword,250,4;Jarrett Irons,440,8,C;Ian Gold,200,9;Dhani Jones,290,9;Steve Morrison,350,3
+CB Charles Woodson,140,18,H;Ty Law,150,9,A;Marcus Ray,0,0;Andre Weathers,100,4;Clarence Thompson,100,4
+S Marcus Ray,190,7;Corwin Brown,200,3;Tommy Hendricks,200,5;Tripp Welborne,0,0;Chuck Winters,170,4`,
+0:`QB Chad Henne,9715,87;John Navarre,9254,72;Drew Henson,3800,24;Tom Brady,0,0;Ryan Mallett,800,7
+RB Mike Hart,5040,41,A;Chris Perry,3696,39,H;B.J. Askew,1500,10;Anthony Thomas,1800,20;Brandon Minor,1500,16
+WR Braylon Edwards,3541,39,H;Mario Manningham,2310,27;Jason Avant,2247,15;Steve Breaston,2400,10;Marquise Walker,2269,17
+TE Tyler Ecker,500,4;Bennie Joppru,700,6;Tim Massaquoi,500,6;Mike Massey,300,3;Carson Butler,300,3
+DE LaMarr Woodley,170,26,H;Brandon Graham,175,29,A;Shawn Crable,170,18;Tim Jamison,120,13;Jake Long? ,0,0
+DT Alan Branch,100,6;Terrance Taylor,110,4;Gabe Watson,120,5;Will Johnson,130,7;Grant Bowman? ,0,0
+LB Larry Foote,300,5,A;David Harris,250,4;Victor Hobson,200,5;Prescott Burgess,200,3;Pierre Woods,150,8
+CB Leon Hall,250,12,C;Marlin Jackson,160,8,A;Marcus Curry? ,0,0;Jeremy LeSueur,150,7;Charles Stewart? ,0,0
+S Ernest Shazor,200,4,A;Jamar Adams,200,6;Ryan Mundy,150,3;Willis Barringer,150,3;Brandon Harrison,200,3`,
+10:`QB Denard Robinson,6250,49,A;Devin Gardner,6336,44;Jake Rudock,3017,20;Shea Patterson,5661,45;Wilton Speight,3500,26
+RB Fitzgerald Toussaint,2300,23;Karan Higdon,2600,23;De'Veon Smith,2200,23;Michael Shaw,1300,15;Vincent Smith,1000,9
+WR Jeremy Gallon,2700,16;Roy Roundtree,2500,13;Junior Hemingway,1600,13;Amara Darboh,1800,13;Jehu Chesson,1500,13
+TE Jake Butt,1646,11,H;Devin Funchess,1000,6;Zach Gentry,700,4;Sean McKeon,500,6;A.J. Williams,100,1
+DE Rashan Gary,130,10;Taco Charlton,90,15;Chase Winovich,180,18;Frank Clark,120,10;Willie Henry,100,8
+DT Maurice Hurst,130,13;Ryan Glasgow,100,5;Mike Martin,170,8;Bryan Mone,60,2;Will Campbell,120,3
+LB Devin Bush,224,10,C;Jabrill Peppers,0,0;Jake Ryan,300,13;Desmond Morgan,300,3;Mike McCray,180,6
+CB Jourdan Lewis,130,6,C;Lavert Hill,130,7;David Long,80,1;Blake Countess,170,9;Channing Stribling,100,6
+S Jabrill Peppers,170,1,H;Dymonte Thomas,140,3;Josh Metellus,180,3;Jordan Kovacs,330,3;Tyree Kinnel,180,4`,
+20:`QB J.J. McCarthy,5710,49;Cade McNamara,3000,21;Joe Milton,600,4;Bryce Underwood,2000,12;Davis Warren,1200,7
+RB Blake Corum,3737,58,C;Hassan Haskins,2300,27;Donovan Edwards,1900,15;Kalel Mullings,1100,9;Zach Charbonnet,1000,11
+WR Roman Wilson,1600,18;Cornelius Johnson,2100,13;Ronnie Bell,1900,6;Andrel Anthony,500,4;Mike Sainristil,0,0
+TE Colston Loveland,1400,10,A;Erick All,600,5;Luke Schoonmaker,600,6;AJ Barner,300,4;Max Bredeson,50,1
+DE Aidan Hutchinson,124,19,H;David Ojabo,35,11;Mike Morris,60,11;Josaiah Stewart,70,9;Derrick Moore,40,5
+DT Mason Graham,60,10,C;Kris Jenkins,100,4;Mazi Smith,80,1;Kenneth Grant,60,6;Christopher Hinton,50,1
+LB Junior Colson,250,4;Josh Ross,200,4;Michael Barrett,170,7;Ernest Hausmann,120,3;Cameron McGrone,80,2
+CB Will Johnson,90,9,A;Mike Sainristil,80,6,C;DJ Turner,60,3;Vincent Gray,90,2;Daxton Hill,0,0
+S Daxton Hill,130,4;Rod Moore,150,7;Makari Paige,120,3;R.J. Moten,150,3;Brad Hawkins,170,2`
+});
+T("Penn State","Big Ten",{
+80:`QB Todd Blackledge,4812,41;John Shaffer,2800,18;Doug Strang,1900,14;Matt Knizner,1500,10;Tony Sacca,0,0
+RB Curt Warner,3398,24,C;D.J. Dozier,3227,25,A;Blair Thomas,0,0;Gary Brown,1700,14;Tony Mumford,1300,10
+WR Kenny Jackson,2000,25,A;Gregg Garrity,1400,6;Michael Timpson,1200,6;Ray Roundtree,1100,8;Eric Hamilton,600,3
+TE Ron Heller? ,0,0;Mike McCloskey,400,4;Dean DiMidio,300,2;Brian Siverling,200,2;Andrew Chiarolla? ,0,0
+DE Bruce Clark,200,14,A;Walker Lee Ashley,180,15;Don Graham,150,10;Rich Kuzma? ,0,0;Andre Collins,0,0
+DT Mike Munchak? ,0,0;Tim Johnson,180,7;Greg Gattuso,150,5;Bob White? ,0,0;Matt Johnson,140,4
+LB Shane Conlan,274,9,C;Andre Collins,300,6,C;Scott Radecic,300,4,A;Trey Bauer,200,4;Pete Giftopoulos,200,3
+CB Ray Isom,0,0;Duffy Cobbs,180,10;Mark Robinson,250,10,A;Eddie Johnson,150,6;Michael Zordich,0,0
+S Michael Zordich,200,8;Ray Isom,190,5;Mark Robinson,0,0;Sherrod Rainge,150,4;Darren Perry,0,0`,
+90:`QB Kerry Collins,5304,39,H;Tony Sacca,5869,41;Wally Richardson,3900,25;Kevin Thompson,2000,14;Mike McQueary,2900,13
+RB Ki-Jana Carter,2829,34,C;Curtis Enis,3256,36,A;Blair Thomas,3301,21,C;Richie Anderson,1400,18;Mike Archie,1600,15
+WR Bobby Engram,3026,31,H;Joe Jurevicius,1900,15;O.J. McDuffie,1988,16,A;Freddie Scott,1200,7;Chafie Fields,1300,6
+TE Kyle Brady,1000,8,A;Ted Johnson? ,0,0;Troy Drayton,600,5;Brad Scioli? ,0,0;Tony Stewart,700,5
+DE Courtney Brown,190,33,H;LaVar Arrington,0,0;Brandon Short,0,0;Jim Nelson? ,0,0;Tyoka Jackson,150,10
+DT Jimmy Kennedy,0,0;Brandon Noble,130,8;David Fleischhauer? ,0,0;Lou Benfatti,170,11;Chris Snyder? ,0,0
+LB LaVar Arrington,173,19,H;Brandon Short,250,13,A;Jim Nelson,250,6;Phil Yeboah-Kodie,250,5;Gerald Filardi? ,0,0
+CB Derek Bochna,150,5;Kim Herring,0,0;Shelly Hammonds,130,5;David Macklin,170,6;Brian Miller,140,6
+S Kim Herring,210,7,C;Darren Perry,250,15,A;Brian Miller,0,0;Mark Tate,140,4;Derek Fox? ,0,0`,
+0:`QB Michael Robinson,5000,40;Zack Mills,7212,41;Anthony Morelli,5000,30;Daryll Clark,5742,43;Rashard Casey,2900,16
+RB Larry Johnson,2953,26,H;Evan Royster,2900,17;Tony Hunt,3320,24;Austin Scott,1100,13;Omar Easy? ,0,0
+WR Derrick Williams,2000,12;Jordan Norwood,1800,9;Deon Butler,2771,22;Bryant Johnson,1800,9;Tony Johnson,1700,10
+TE Andrew Quarless,1000,7;Isaac Smolko,500,4;Tony Stewart,0,0;Tony Kearney? ,0,0;Mickey Shuler Jr.? ,0,0
+DE Tamba Hali,190,25,A;Michael Haynes,150,26,C;Aaron Maybin,80,17,A;Jared Odrick,0,0;Josh Gaines,120,12
+DT Jimmy Kennedy,160,13,A;Jared Odrick,150,14,A;Jay Alford,140,14;Ed Johnson,100,5;Devon Still,0,0
+LB Paul Posluszny,372,9,H;Dan Connor,419,10,H;Sean Lee,300,8;Navorro Bowman,0,0;Tim Shaw,150,6
+CB Alan Zemaitis,150,10;Justin King,120,5;Bryant? ,0,0;Calvin Lowry,0,0;A.J. Wallace,80,1
+S Calvin Lowry,230,13;Anthony Scirrotto,200,10;Drew Astorino,180,4;Tony Davis? ,0,0;Andrew Guman? ,0,0`,
+10:`QB Trace McSorley,9899,77;Christian Hackenberg,8457,48;Matt McGloin,5000,40;Rob Bolden,2900,16;Sean Clifford,0,0
+RB Saquon Barkley,3843,43,C;Miles Sanders,1600,10;Zach Zwinak,2600,26;Silas Redd,1700,16;Akeel Lynch,1400,6
+WR Allen Robinson,2479,17,A;Chris Godwin,2421,18;DaeSean Hamilton,2842,18;Juwan Johnson,1200,3;KJ Hamler,1600,13
+TE Mike Gesicki,1481,15,A;Pat Freiermuth,0,0;Jesse James,800,11;Kyle Carter,600,3;Adam Breneman,300,3
+DE Yetur Gross-Matos,100,18;Shareef Miller,110,14;Deion Barnes,150,15;Carl Nassib,64,16,H;Garrett Sickels,90,10
+DT Devon Still,100,8,A;Anthony Zettel,120,15;Austin Johnson,140,9;Robert Windsor,90,10;DaQuan Jones,100,5
+LB Micah Parsons,191,6,A;Michael Mauti,250,3;Mike Hull,250,5;Gerald Hodges,250,4;Jason Cabinda,300,4
+CB John Reid,130,3;Grant Haley,170,3;Amani Oruwariye,100,6;Jordan Lucas,170,3;Adrian Amos,140,4
+S Marcus Allen,320,2;Troy Apke,100,2;Malik Golden,120,2;Garrett Taylor,100,1;Lamont Wade,0,0`,
+20:`QB Sean Clifford,8500,62;Drew Allar,7000,59;Beau Pribula,800,6;Will Levis,600,4;Ta'Quan Roberson,100,0
+RB Nicholas Singleton,3500,36;Kaytron Allen,3500,31;Noah Cain,1200,16;Keyvone Lee,1000,4;Journey Brown,0,0
+WR Jahan Dotson,2700,24,A;Parker Washington,1800,8;KeAndre Lambert-Smith,1800,10;Mitchell Tinsley,500,4;Harrison Wallace III,500,3
+TE Tyler Warren,1600,13,H;Pat Freiermuth,1200,14;Brenton Strange,800,9;Theo Johnson,700,10;Khalil Dinkins,200,3
+DE Abdul Carter,110,15,C;Chop Robinson,50,11;Dani Dennis-Sutton,90,10;Adisa Isaac,90,12;Jayson Oweh,70,7
+DT PJ Mustipher,90,3;Zane Durant,70,4;Hakeem Beamon,30,2;Dvon Ellies,70,2;Coziah Izzard,60,3
+LB Brandon Smith,150,4;Jaylen Reed,0,0;Dominic DeLuca,100,1;Ellis Brooks,130,3;Kobe King,140,2
+CB Joey Porter Jr.,100,3,A;Kalen King,90,4;Daequan Hardy,80,3;Tariq Castro-Fields,100,2;Johnny Dixon,80,2
+S Jaquan Brisker,180,4,A;Kevin Winston Jr.,130,1;Jaylen Reed,150,3;Keaton Ellis,80,2;Ji'Ayir Brown,160,10,A`
+});
+T("USC","Big Ten",{
+80:`QB Rodney Peete,7640,52,A;Sean Salisbury,4500,25;Tim Green,0,0;Rodney? ,0,0;Todd Marinovich,0,0
+RB Marcus Allen,4682,45,H;Charles White,0,0;Fred Crutcher,1700,16;Ryan Knight,1800,13;Steven Webster,1600,15
+WR Erik Affholter,1500,12;John Jackson,2400,15;Jeff Simmons,1700,10;Ken Henry,1300,9;Hank Norman,700,4
+TE Paul Green? ,0,0;Hank Norman? ,0,0;Joe Cormier,400,3;Scott Galbraith? ,0,0;Ralph Mitchell? ,0,0
+DE Tim Ryan,0,0;Junior Seau,0,0;George Achica,180,12,A;Ron Mattes? ,0,0;Dennis Edwards,150,7
+DT Tim Ryan,180,12,A;George Achica,0,0;Dan Owens,150,8;Brent Moore,150,6;Gus? ,0,0
+LB Junior Seau,129,19,C;Jack Del Rio,230,7,C;Keith Browner,200,8;Chip Banks,250,8,A;Riki Gray? ,0,0
+CB Joey Browner,0,0;Tim McDonald,0,0;Mark Carrier,0,0;Ronnie Lott,0,0;Kevin Copeland? ,0,0
+S Mark Carrier,200,13,H;Tim McDonald,240,10,C;Joey Browner,220,8,A;Cleveland Colter,200,10,A;Kevin Gunn? ,0,0`,
+90:`QB Rob Johnson,6200,46;Todd Marinovich,5001,29;Brad Otton,3500,26;Carson Palmer,0,0;Reggie Perry? ,0,0
+RB Ricky Ervins,1700,13;Delon Washington,2000,20;Shawn Walters,1500,12;LaVale Woods? ,0,0;Chad Morton,1800,15
+WR Keyshawn Johnson,2796,16,C;Johnnie Morton,3201,23,C;Curtis Conway,1500,8;R. Jay Soward,2400,17;Larry Parker? ,0,0
+TE Johnny McWilliams,700,5;Kenny? ,0,0;Antoine Harris? ,0,0;Scott? ,0,0;Mike? ,0,0
+DE Willie McGinest,180,30,C;Darrell Russell,0,0;Ennis Davis? ,0,0;Sultan Abdul-Malik? ,0,0;Chris Claiborne? ,0,0
+DT Darrell Russell,170,10,A;Ennis Davis? ,0,0;Matt Gee? ,0,0;Brian? ,0,0;Ryan? ,0,0
+LB Chris Claiborne,343,8,H;Ryan? ,0,0;Mike Salmon? ,0,0;Scott Ross? ,0,0;Sammy? ,0,0
+CB Daylon McCutcheon,200,9,A;Brian Kelly,140,8;Jason Sehorn,0,0;Dwayne? ,0,0;Mark? ,0,0
+S Jason Sehorn,140,4;Antuan Simmons? ,0,0;Brian? ,0,0;Sammy Knight,200,13,A;Mark Carrier,0,0`,
+0:`QB Matt Leinart,10693,99,H;Carson Palmer,11818,72,H;Mark Sanchez,3965,41;John David Booty,6125,55;Matt Barkley,0,0
+RB Reggie Bush,3169,25,H;LenDale White,3159,52;Joe McKnight,2200,12;Justin Fargas,1100,9;C.J. Gable,1300,9
+WR Mike Williams,2579,30,C;Dwayne Jarrett,3138,41,C;Steve Smith,2900,17;Kareem Kelly,3104,15;Damian Williams,1300,13
+TE Fred Davis,1000,8,H;Dominique Byrd,800,10;Alex Holmes,400,5;Anthony McCoy,800,7;Gregg Guenther? ,0,0
+DE Lawrence Jackson,190,30,A;Kenechi Udeze,140,28,C;Shaun Cody,170,22,A;Everson Griffen,0,0;Frostee Rucker,120,10
+DT Mike Patterson,180,20,C;Sedrick Ellis,150,19,C;Shaun Cody,0,0;Fili Moala,110,6;Lawrence? ,0,0
+LB Rey Maualuga,250,7,H;Brian Cushing,200,10;Keith Rivers,250,4,A;Clay Matthews,100,6;Matt Grootegoed,250,9
+CB Terrell Thomas,150,5;Will Poole,140,5;Kevin Thomas,100,4;Justin Wyatt? ,0,0;Cary Harris,150,4
+S Troy Polamalu,278,6,C;Taylor Mays,276,5,A;Darnell Bing,200,6;Kevin Ellison,220,6;Josh Pinkard,140,4`,
+10:`QB Sam Darnold,7229,57;Matt Barkley,12327,116,A;Cody Kessler,10339,88;JT Daniels,3500,16;Kedon Slovis,4500,32
+RB Ronald Jones II,3619,39;Justin Davis,2400,15;Javorius Allen,2500,25;Silas Redd,1700,12;Curtis McNeal,1700,11
+WR Marqise Lee,3655,29,H;Robert Woods,3880,32,C;JuJu Smith-Schuster,3092,25,A;Nelson Agholor,2588,20;Michael Pittman Jr.,2500,19
+TE Xavier Grimble,700,9;Randall Telfer,300,6;Tyler Petite,200,3;Daniel Imatorbhebhe,100,1;Erik Krommenhoek,100,1
+DE Porter Gustin,140,13;Leonard Williams,170,21,A;Nick Perry,90,14;Wes Horton,80,6;Kenechi Udeze,0,0
+DT Leonard Williams,0,0;Jurrell Casey,130,8;Antwaun Woods,100,6;Rasheem Green,100,15;George Uko,90,4
+LB Su'a Cravens,260,9;Hayes Pullard,400,5;Cameron Smith,350,6;Lamar Dawson,150,2;Devon Kennard,150,9
+CB Adoree' Jackson,140,11,H;Nickell Robey,140,8;Jack Jones,100,2;Iman Marshall,170,6;Kevon Seymour,120,1
+S T.J. McDonald,260,9,A;Dion Bailey,180,8;Marcus Allen? ,0,0;Chris Hawkins,160,5;Su'a Cravens,0,0`,
+20:`QB Caleb Williams,4537,42,H;Kedon Slovis,1600,11;Miller Moss,3100,23;Jayden Maiava,3500,25;Jaxson Dart,1300,8
+RB Travis Dye,884,10;Woody Marks,1100,9;Austin Jones,700,7;MarShawn Lloyd,820,7;Vavae Malepeai,800,8
+WR Drake London,1084,7,A;Jordan Addison,875,8;Amon-Ra St. Brown,478,7;Tahj Washington,1700,11;Brenden Rice,1400,16
+TE Lake McRee,600,5;Erik Krommenhoek,100,2;Malcolm Epps,200,3;Kade Eldridge? ,0,0;Josh Falo,100,1
+DE Tuli Tuipulotu,80,13;Drake Jackson,80,6;Korey Foreman,30,1;Romello Height,40,3;Anthony Lucas,40,3
+DT Jay Tufele,90,5;Marlon Tuipulotu,90,4;Bear Alexander,60,3;Brandon Pili,50,3;Nate Clifton,40,1
+LB Mason Cobb,200,7;Shane Lee,130,2;Eric Gentry,150,4;Ralen Goforth,60,1;Kana'i Mauga,150,1
+CB Ceyair Wright,60,1;Jaylin Smith,80,4;Mekhi Blackmon,60,3;Kamari Ramsey,80,2;Max Williams,40,1
+S Calen Bullock,150,8,A;Talanoa Hufanga,135,4,C;Isaiah Pola-Mao,170,5;Bryson Shaw,80,2;Akili Arnold,40,1`
+});
+T("Oregon","Big Ten",{
+80:`QB Chris Miller,6681,42;Bill Musgrave,0,0;Mike Jorgensen,1500,9;Reggie Ogburn,2000,10;Bill? ,0,0
+RB Derek Loville,2700,30;Kevin Willhite,1200,8;Tony Cherry? ,0,0;Latin Berry,1000,8;Dwight? ,0,0
+WR Lew Barnes,1800,14;Terry Obee,1500,12;Lou Stravaganza? ,0,0;Bruce Ellington? ,0,0;Reggie? ,0,0
+TE Bob? ,0,0;Mike? ,0,0;Gary? ,0,0;Paul? ,0,0;Steve? ,0,0
+DE Andy? ,0,0;Mike? ,0,0;Rich? ,0,0;Matt? ,0,0;Dave? ,0,0
+DT Dave? ,0,0;Mike? ,0,0;Tim? ,0,0;Matt LaBounty,150,10;Rich? ,0,0
+LB Ken Woodard? ,0,0;Mark? ,0,0;Dave? ,0,0;Andy? ,0,0;Jim? ,0,0
+CB Mark Lee? ,0,0;Tony? ,0,0;Greg? ,0,0;Steve? ,0,0;Scott? ,0,0
+S Chris? ,0,0;Mark? ,0,0;Rick? ,0,0;Dave? ,0,0;Jim? ,0,0`,
+90:`QB Akili Smith,3763,32;Bill Musgrave,8343,60;Danny O'Neil,8301,62;Joey Harrington,0,0;Tony Graziani,3500,25
+RB Reuben Droughns,1700,13;Ricky Whittle,2500,24;Saladin McCullough,1500,12;Derek Loville,0,0;Herman? ,0,0
+WR Tony Hartley,2200,15;Cristin McLemore,1800,14;Pat Johnson,1500,9;Damon Griffin,1700,14;Bob? ,0,0
+TE Josh Wilcox,700,6;Blake Spence? ,0,0;Justin Peelle,0,0;Jeff? ,0,0;Todd? ,0,0
+DE Saul Patu,150,14;Haloti Ngata,0,0;Herman O'Berry? ,0,0;Matt? ,0,0;Lew? ,0,0
+DT Rich? ,0,0;Saul? ,0,0;Ryan? ,0,0;Tony? ,0,0;Eric? ,0,0
+LB Rich Ruhl? ,0,0;Peter Sirmon,250,4;Jeremy? ,0,0;Justin? ,0,0;Tasi Malepeai? ,0,0
+CB Alex Molden,170,12,A;Herman O'Berry,150,9;Kenny Wheaton,150,10;Rashad Bauman,140,8;Eric? ,0,0
+S Chad Cota,250,8;Jeremy? ,0,0;Tony? ,0,0;Marcus? ,0,0;Alex? ,0,0`,
+0:`QB Joey Harrington,6911,59;Dennis Dixon,4753,35;Kellen Clemens,7555,61;Jeremiah Masoli,3400,30;Jason Fife? ,0,0
+RB LaMichael James,1546,14;Jonathan Stewart,2891,27;Maurice Morris,2100,18;Terrence Whitehead,2600,17;LeGarrette Blount,1000,17
+WR Samie Parker,1800,12;Jaison Williams,2100,17;Demetrius Williams,2000,20;Keenan Howry,2100,15;Jeff Maehl,0,0
+TE Ed Dickson,1550,12;Justin Peelle,700,8;Tim Day,500,4;Dante Rosario,900,8;Jordan? ,0,0
+DE Nick Reed,170,29;Will Tukuafu,120,8;Darius Sanders? ,0,0;Matt Toeaina? ,0,0;Victor Filipe? ,0,0
+DT Haloti Ngata,190,10,C;Igor Olshansky,120,6;Ra'Shon Harris,100,4;Brandon Bair,0,0;Matt Toeaina,100,5
+LB Spencer Paysinger? ,0,0;Kevin Mitchell? ,0,0;Brian Butler? ,0,0;Casey Matthews,0,0;Jerry Matson? ,0,0
+CB Jairus Byrd,180,17,A;Walter Thurmond,150,10;Aaron Gipson? ,0,0;Steve Smith? ,0,0;Rashad Bauman,0,0
+S Patrick Chung,380,6,A;T.J. Ward,220,6;Matthew Harper? ,0,0;Keith Lewis? ,0,0;Eric? ,0,0`,
+10:`QB Marcus Mariota,10796,105,H;Justin Herbert,10541,95;Darron Thomas,5910,66;Vernon Adams,2643,26;Bo Nix,0,0
+RB LaMichael James,3800,39,C;Kenjon Barner,3500,41,A;Royce Freeman,5621,60;De'Anthony Thomas,1890,23;CJ Verdell,2500,20
+WR Josh Huff,2100,24;Jeff Maehl,2600,25;Byron Marshall,1300,7;Charles Nelson,1600,13;Dillon Mitchell,1600,10
+TE Pharaoh Brown,700,6;Colt Lyerla,500,7;Jake Breeland,500,8;David Paulson,600,8;Evan Baylis,300,2
+DE DeForest Buckner,226,18,C;Dion Jordan,120,14;Arik Armstead,90,5;Jalen Jelks,140,15;Kayvon Thibodeaux,0,0
+DT Brandon Bair,90,7;Taylor Hart,140,8;Wade Keliikipi,80,3;Jordon Scott,80,3;Henry Mondeaux,80,6
+LB Troy Hill,0,0;Kiko Alonso,170,8;Michael Clay,300,6;Troy Dye,391,13,A;Tony Washington,160,13
+CB Ifo Ekpre-Olomu,203,9,A;Cliff Harris,100,12,A;Terrance Mitchell,130,5;Arrion Springs,140,3;Thomas Graham Jr.,200,8
+S John Boyett,280,6;Erick Dargan,150,8;Ugo Amadi,180,6;Avery Patterson,150,3;Brenden Schooler,100,2`,
+20:`QB Bo Nix,8101,74,A;Dillon Gabriel,3857,30,A;Anthony Brown,2989,18;Ty Thompson,300,2;Dante Moore,3000,27
+RB Bucky Irving,2400,17;Jordan James,1700,20;CJ Verdell,1000,8;Travis Dye,1271,16;Noah Whittington,1000,4
+WR Troy Franklin,2900,26,A;Tez Johnson,2000,22;Evan Stewart,600,5;Traeshon Holden,600,8;Devon Williams,500,4
+TE Terrance Ferguson,1500,16;Cam McCormick,300,4;Patrick Herbert,200,2;Moliki Matavao,100,1;Kenyon Sadiq,500,8
+DE Kayvon Thibodeaux,120,19,C;Jordan Burch,100,12;Brandon Dorlus,100,9;Jamal Hill? ,0,0;Matayo Uiagalelei,60,11
+DT Derrick Harmon,50,5;Jordan Scott,80,3;Popo Aumavae,40,3;Taki Taimani,40,1;A'Mauri Washington,20,1
+LB Noah Sewell,230,6;Jeffrey Bassa,180,4;Justin Flowe,70,1;Jackson LaDuke? ,0,0;Matthew Jackson? ,0,0
+CB Mykael Wright,90,4;Christian Gonzalez,50,4;Khyree Jackson,40,3;Jahlil Florence,60,2;Nikko Reed,30,1
+S Jamal Hill,90,2;Tysheem Johnson,80,1;Evan Williams,60,3;Bryan Addison,70,1;Jahsiah Galvan? ,0,0`
+});
+T("Nebraska","Big Ten",{
+80:`QB Turner Gill,3317,34;Steve Taylor,2815,30;Mark Mauer,1500,10;Travis Turner? ,0,0;Gerry Gdowski,1800,19
+RB Mike Rozier,4780,49,H;Jeff Smith,1700,15;Keith Jones,2500,24;Roger Craig,2000,26;Doug DuBose,2000,17
+WR Irving Fryar,1196,9,A;Rod Smith? ,0,0;Todd Frain? ,0,0;Richard Bell? ,0,0;Jason Gamble? ,0,0
+TE Junior Miller,0,0;Todd Frain,500,6;Tom Banderas? ,0,0;Monte Engebritson? ,0,0;Jamie Williams? ,0,0
+DE Broderick Thomas,200,23,C;Neil Smith,150,9,A;Bill Weber? ,0,0;Tony Felici? ,0,0;Jim Skow,150,13,A
+DT Danny Noonan,160,8,C;Neil Smith,0,0;Jim? ,0,0;Lawrence Pete,150,8;Toby Williams? ,0,0
+LB Broderick Thomas,0,0;Marc Munford? ,0,0;Steve Damkroger? ,0,0;Mark Mauer? ,0,0;LeRoy Etienne? ,0,0
+CB Charles Fryar? ,0,0;Brian Davis? ,0,0;Dave Burke? ,0,0;Bret Clark,150,9,A;Kenny Wilhite? ,0,0
+S Bret Clark,0,0;Mark Blazek? ,0,0;Dave Burke? ,0,0;Tim Jackson? ,0,0;Charlie? ,0,0`,
+90:`QB Tommie Frazier,3521,43,A;Scott Frost,2333,13;Eric Crouch,0,0;Brook Berringer,2500,23;Mickey Joseph? ,0,0
+RB Lawrence Phillips,2777,33,A;Ahman Green,3880,42,A;Calvin Jones,3153,40;Derek Brown,2000,20;Dan Alexander,1800,15
+WR Abdul Muhammad? ,0,0;Johnny Mitchell,1100,10;Matt Davison,1000,6;Corey Dixon? ,0,0;Reggie Baul? ,0,0
+TE Tracey Wistrom,500,6;Mark Gilman? ,0,0;Johnny Mitchell,0,0;Sheldon Jackson? ,0,0;Eric Alford? ,0,0
+DE Grant Wistrom,200,26,H;Jared Tomich,150,20,A;Trev Alberts,150,29,H;Mike Rucker,120,15;Chad Kelsay? ,0,0
+DT Jason Peter,140,10,A;Christian Peter,150,10;Kenny Walker,150,12,A;Terry Connealy? ,0,0;Steve Warren? ,0,0
+LB Ed Stewart,300,4,C;Mike Brown? ,0,0;Jamel Williams? ,0,0;Doug Colman? ,0,0;Carlos Polk? ,0,0
+CB Ralph Brown,180,9,C;Mike Minter,0,0;Michael Booker? ,0,0;Tyrone Williams,140,7;Keyuo Craver? ,0,0
+S Mike Brown,280,13,C;Mike Minter,220,10;Eric Warfield? ,0,0;Clinton Childs? ,0,0;Tony Veland? ,0,0`,
+0:`QB Eric Crouch,4481,29,H;Jammal Lord,2600,16;Sam Keller? ,0,0;Joe Ganz,4000,32;Zac Taylor,5850,45
+RB Dan Alexander,1154,8;Cory Ross,2600,17;Marlon Lucky,1600,12;Brandon Jackson,1500,13;Roy Helu,0,0
+WR Nate Swift,2500,20;Maurice Purify,1500,13;Terrence Nunn,2000,12;Ross Pilkington? ,0,0;Wilson Thomas? ,0,0
+TE Matt Herian,800,6;Mike? ,0,0;J.B. Phillips,300,2;Sean Hill? ,0,0;Ryan Hoskins? ,0,0
+DE Adam Carriker,150,14;Jay Moore,130,10;Barry Turner,100,12;Pierre Allen,0,0;Chris Kelsay,150,10
+DT Ndamukong Suh,215,24,H;Le Kevin Smith,100,4;Ty Steinkuhler? ,0,0;Ryon Bingham? ,0,0;Jared Crick,0,0
+LB Barrett Ruud,432,9,A;Phillip Dillard,150,4;Corey McKeon,250,5;Demorrio Williams,200,6;Bo Ruud? ,0,0
+CB Fabian Washington,130,5;DeJuan Groce,140,8;Keyuo Craver,150,7;Zackary Bowman,100,6;Prince Amukamara,0,0
+S Josh Bullocks,150,12,A;Larry Asante,200,6;Daniel Bullocks,200,6;Matt O'Hanlon? ,0,0;Lornell McPherson? ,0,0`,
+10:`QB Taylor Martinez,7258,56;Tommy Armstrong Jr.,8792,68;Adrian Martinez,0,0;Tanner Lee,3100,23;Ryker Fyfe,1000,4
+RB Ameer Abdullah,4588,39,A;Roy Helu,1245,11;Rex Burkhead,3329,30;Devine Ozigbo,1100,12;Imani Cross,1000,13
+WR Kenny Bell,2689,20;Jordan Westerkamp,1900,15;Stanley Morgan Jr.,2747,22;JD Spielman,2546,16;Quincy Enunwa,1600,15
+TE Kyler Reed,800,12;Mike McNeill,700,8;Jake Long? ,0,0;Cethan Carter,400,4;Sam Cotton,200,2
+DE Randy Gregory,85,17,A;Pierre Allen,150,10;Jason Ankrah,100,6;Freedom Akinmoladun,90,8;Ben Stille,80,10
+DT Ndamukong Suh,85,12,H;Jared Crick,200,20;Baron Tanner? ,0,0;Maliek Collins,90,6;Vincent Valentine,70,3
+LB Lavonte David,285,11,A;Will Compton,240,5;Mohamed Barry,200,3;Dedrick Young,250,3;Josh Banderas,200,2
+CB Prince Amukamara,130,5,C;Alfonzo Dennard,90,5;Stanley Jean-Baptiste,100,7;Lamar Jackson,130,5;Chris Jones,100,3
+S Daimion Stafford,150,5;Nate Gerry,280,13;Corey Cooper,200,4;Aaron Williams,160,3;Antonio Reed,90,4`,
+20:`QB Adrian Martinez,8491,45;Dylan Raiola,2800,13;Jeff Sims,800,3;Heinrich Haarberg,1000,7;Casey Thompson,1600,10
+RB Anthony Grant,900,7;Rahmir Johnson,700,4;Emmett Johnson,1000,6;Dedrick Mills,600,7;Marvin Scott III? ,0,0
+WR Wan'Dale Robinson,1500,7;Samori Toure,898,5;Trey Palmer,750,9;Marcus Washington,400,1;Isaiah Neyor,200,3
+TE Travis Vokolek,500,3;Thomas Fidone,300,4;Austin Allen,900,1;Chancellor Brewington? ,0,0;Luke Lindenmeyer,100,1
+DE Ty Robinson,80,8;Garrett Nelson,100,10;Ochaun Mathis,60,3;Jimari Butler,40,3;Caleb Tannor,80,5
+DT Nash Hutmacher,40,1;Ty Robinson,0,0;Damion Daniels,50,2;Leslie Black? ,0,0;Mikai Gbayor? ,0,0
+LB Luke Reimer,200,3;Nick Henrich,150,2;JoJo Domann,180,3;John Bullock,100,2;MJ Sherman,40,1
+CB Cam Taylor-Britt,160,4;Quinton Newsome,100,2;Tommi Hill,60,6;Dwight McGlothern,60,5;Ethan Nation? ,0,0
+S Isaac Gifford,200,3;Marques Buford Jr.,120,2;Deontai Williams,100,2;Myles Farmer,60,2;Malcolm Hartzog,60,2`
+});
+T("Clemson","ACC",{
+80:`QB Homer Jordan,3600,20;Rodney Williams,4600,22;Mike Eppley,3000,20;Chris Morocco,1000,5;DeChane Cameron,1500,7
+RB Terry Allen,2200,26;Terrence Flagler,1800,16;Kenny Flowers,2300,18;Stacey Driver,2400,21;Chuck McSwain,1400,11
+WR Perry Tuttle,2500,17,A;Jerry Butler,0,0;Ray Williams,1200,8;Keith Jennings,1000,5;Gary Cooper,900,5
+TE K.D. Dunn,500,4;Keith Jennings,0,0;Jim Riggs,300,2;Bennie Cunningham,0,0;Rich Wurster? ,0,0
+DE William Perry,0,0;Michael Dean Perry,240,28,A;Jeff Bryant,150,13,A;Dwight Pickens? ,0,0;Andy Headen,150,8
+DT William Perry,200,25,C;Michael Dean Perry,0,0;William Devane,150,7;Jim Stuckey,150,10,A;Ray Brown? ,0,0
+LB Jeff Davis,469,6,C;Levon Kirkland,300,19,A;Johnny Rembert,200,4;Henry Walls,250,4;Doug Brewster? ,0,0
+CB Terry Kinard,0,0;Donnell Woolford,150,10,C;Dexter Davis,130,7;James Lott,150,8;Rod McSwain,120,6
+S Terry Kinard,294,17,C;Delton Hall,170,7,A;Bill Smith? ,0,0;Kevin Mack,0,0;Tim Childers? ,0,0`,
+90:`QB Woodrow Dantzler,0,0;Brandon Streeter,3700,18;DeChane Cameron,2700,13;Nealon Greene,4500,26;Louis Solomon,1000,4
+RB Raymond Priester,3000,13;Ronald Williams,1800,13;Rodney Blunt,1500,12;Emory Smith,1300,11;Travis Zachery,0,0
+WR Rod Gardner,2100,13;Terry Smith,1700,8;Tony Horne,1100,5;Brian Wofford? ,0,0;Mal Lawyer,1200,8
+TE Lamont Hall,500,3;Robert? ,0,0;John Mobley? ,0,0;Ricky? ,0,0;Pat Cannon? ,0,0
+DE Chester McGlockton,150,10;Brentson Buckner,180,15;Trevor Pryce,120,12;Adrian Dingle,140,19;Rob Bodine? ,0,0
+DT Chester McGlockton,0,0;Raymond Jackson? ,0,0;Mark Gillespie? ,0,0;Terry Jolly? ,0,0;Lamont? ,0,0
+LB Anthony Simmons,486,11,C;Levon Kirkland,0,0;Ed McDaniel,300,6;Wayne Simmons,250,8;Chad Carson,300,3
+CB Dexter McCleon,150,12;Antwan Edwards,160,8;Andre Humphrey? ,0,0;Brian Dawkins,0,0;Robert O'Neal? ,0,0
+S Brian Dawkins,260,11;Robert O'Neal,200,10;Leomont Evans? ,0,0;Patrick Sapp? ,0,0;Leomont? ,0,0`,
+0:`QB Woodrow Dantzler,6037,38;Charlie Whitehurst,9665,49;Cullen Harper,6100,51;Kyle Parker,2500,32;Will Proctor,2600,13
+RB C.J. Spiller,3547,32,C;James Davis,3881,47;Travis Zachery,3500,40;Bernard Rambert? ,0,0;Andre Ellington,0,0
+WR Jacoby Ford,2000,15;Airese Currie,1800,10;Aaron Kelly,2950,22;Derrick Hamilton,1900,13;Chansi Stuckey,1800,8
+TE Michael Palmer,600,6;Bobby Williams? ,0,0;Thomas Hunter? ,0,0;Ben Hall? ,0,0;Durrell Barry? ,0,0
+DE Gaines Adams,180,28,C;Phillip Merling,150,12;Da'Quan Bowers,0,0;Ricky Sapp,150,14;Bryant McNeal,130,18
+DT Jarrett Jack? ,0,0;Donnell Washington,100,4;Rashaad Jackson,90,3;DaQuan? ,0,0;Brandon Thompson,0,0
+LB Leroy Hill,220,8;Anthony Waters,200,4;Tim Bailey,200,2;Kavell Conner,300,4;Brandon Maye,200,3
+CB Justin Miller,140,8;Tye Hill,150,6;Crezdon Butler,150,9;Chris Clemons,200,6;Byron Maxwell? ,0,0
+S Michael Hamlin,260,10;Chris Clemons,0,0;DeAndre McDaniel,200,10;Jamaal Fudge? ,0,0;Charles Bennett? ,0,0`,
+10:`QB Deshaun Watson,10168,90,H;Tajh Boyd,11904,107;Trevor Lawrence,0,0;Kelly Bryant,2900,13;Kyle Parker,0,0
+RB Wayne Gallman,3429,34;Andre Ellington,3218,35;Travis Etienne,0,0;Jaylen? ,0,0;Roderick McDowell,1100,7
+WR Sammy Watkins,3391,27,C;DeAndre Hopkins,3020,27;Mike Williams,3000,30;Hunter Renfrow,2133,15;Artavis Scott,2500,15
+TE Jordan Leggett,1598,18;Dwayne Allen,1079,11,H;Brandon Ford,500,8;Stanton Seckinger? ,0,0;Garrett Williams? ,0,0
+DE Vic Beasley,155,33,C;Da'Quan Bowers,95,18,H;Clelin Ferrell,180,27,A;Shaq Lawson,150,16,A;Austin Bryant,130,20
+DT Christian Wilkins,224,16,C;Dexter Lawrence,110,10,A;Grady Jarrett,180,8;Brandon Thompson,150,6;D.J. Reader,80,3
+LB Ben Boulware,320,8;Stephone Anthony,350,8;Tre Lamar,200,8;Isaiah Simmons,240,10,H;Kendall Joseph,280,4
+CB Mackensie Alexander,80,0;Breeland? ,0,0;Bashaud Breeland,150,4;Cordrea Tankersley,120,8;A.J. Terrell,100,5
+S Tanner Muse,200,3;Jayron Kearse,200,6;Rashard Hall,250,15;T.J. Green,100,0;Jadar Johnson,150,6`,
+20:`QB Trevor Lawrence,10098,90,A;D.J. Uiagalelei,4500,27;Cade Klubnik,6000,50;Taisun Phommachanh,100,1;Christopher Vizzina,0,0
+RB Travis Etienne,4952,70,C;Will Shipley,2300,29;Phil Mafah,1900,24;Lyn-J Dixon,1000,9;Kobe Pace,800,8
+WR Amari Rodgers,1700,13;Justyn Ross,2000,17;Antonio Williams,1600,12;Joseph Ngata,500,1;Bryant Wesco Jr.,0,0
+TE Braden Galloway,500,3;Jake Briningstool,1300,12;Davis Allen,600,7;J.C. Chalk,100,1;Olsen Patt-Henry,0,0
+DE Myles Murphy,110,18;Xavier Thomas,120,14;KJ Henry,120,10;Justin Foster,80,6;T.J. Parker,60,16,A
+DT Bryan Bresee,60,6;Tyler Davis,200,14;Ruke Orhorhoro,70,6;Peter Woods,50,4;Jordan Williams? ,0,0
+LB James Skalski,320,9;Trenton Simpson,200,13;Barrett Carter,250,11,A;Jeremiah Trotter Jr.,170,6;Baylon Spector,250,8
+CB Derion Kendrick,90,4;Andrew Booth Jr.,70,5;Mario Goodrich,90,3;Nate Wiggins,100,4;Avieon Terrell,80,2
+S Nolan Turner,200,6;Andrew Mukuba,150,4;R.J. Mickens,150,4;Jalyn Phillips,160,1;Lannden Zanders,80,1`
+});
+T("Florida State","ACC",{
+80:`QB Peter Tom Willis,3000,20;Danny McManus,4700,30;Chip Ferguson,4500,30;Eric Thomas,2000,12;Kelly Lowrey,2000,12
+RB Sammie Smith,2539,18;Dexter Carter,2000,15;Greg Allen,3769,44,A;Keith Jones,1100,8;Victor Floyd,1300,9
+WR Ron Lewis,1700,10;Hassan Jones,2200,18;Terry Anthony,1500,15;Herb Gainer,1000,6;Weegie Thompson,1300,10
+TE Pat Carter,700,6;Zeke Mowatt? ,0,0;Reggie Johnson,400,3;Dave Mundy? ,0,0;Lonnie Johnson,0,0
+DE Ron Simmons,0,0;Odell Haggins,0,0;Jamie Dukes? ,0,0;Tracy Sanders? ,0,0;Felton Hayes? ,0,0
+DT Ron Simmons,0,0;Odell Haggins,180,12;Eric Hayes,150,12;Gerald Nichols,150,8;Alphonso Carreker,150,10
+LB Paul McGowan,400,6,C;Kirk Carruthers? ,0,0;Alphonso Williams? ,0,0;Henry Benson? ,0,0;Kelvin Smith? ,0,0
+CB Deion Sanders,140,14,H;Martin Mayhew,150,8;LeRoy Butler,0,0;Bobby Butler,140,7;Leroy Butler? ,0,0
+S Bobby Butler,0,0;LeRoy Butler,200,8,A;Dedrick Dodge,180,9;Stan Shiver? ,0,0;Monk Bonasorte,180,15,A`,
+90:`QB Charlie Ward,5747,49,H;Chris Weinke,0,0;Danny Kanell,6372,57;Thad Busby,4000,26;Casey Weldon,4300,22
+RB Warrick Dunn,3959,37;Amp Lee,2000,26;Travis Minor,0,0;Sean Jackson,1600,13;Rock Preston,1300,11
+WR Peter Warrick,3517,32,C;Kez McCorvey,2100,15;Tamarick Vanover,1500,12;Laveranues Coles,1700,13;Andre Cooper,2000,20
+TE Lonnie Johnson,700,6;Melvin Pearsall? ,0,0;Ryan? ,0,0;Lawrence? ,0,0;Brian? ,0,0
+DE Andre Wadsworth,200,23,C;Peter Boulware,150,32,C;Reinard Wilson,200,35,A;Jamal Reynolds,0,0;Derrick Alexander? ,0,0
+DT Corey Simon,180,14,C;Dan Footman? ,0,0;Larry Smith,120,6;Daryl Bush? ,0,0;Henri Crockett,0,0
+LB Marvin Jones,369,6,H;Derrick Brooks,274,6,C;Sam Cowart,350,7,C;Todd Rebol? ,0,0;Lamont Green? ,0,0
+CB Terrell Buckley,150,21,H;Clifton Abraham,140,9,A;Samari Rolle,150,10;Mario Edwards,140,8;Tay Cody,140,7
+S Devin Bush,200,8;Sam Madison? ,0,0;Dexter? ,0,0;Corey Fuller,150,8;Abdual Howard? ,0,0`,
+0:`QB Chris Weinke,9839,79,H;Christian Ponder,6872,49;Drew Weatherford,7000,40;Chris Rix,7000,50;Wyatt Sexton,2000,12
+RB Leon Washington,2600,20;Greg Jones,2500,24;Travis Minor,3100,24;Lorenzo Booker,2300,15;Antone Smith,1500,17
+WR Anquan Boldin,2600,25;Craphonso Thorpe,2000,15;Marvin Minnis,1800,12;Greg Carr,2500,30;Willie Reid,1300,8
+TE Brian Sawyer? ,0,0;Matt Henshaw,300,3;Caz Piurowski,500,4;Donnie Carter? ,0,0;Ryan Sydnor? ,0,0
+DE Jamal Reynolds,150,23,H;Darnell Dockett,0,0;Everette Brown,120,22,A;Kamerion Wimbley,100,15;Andre Fluellen? ,0,0
+DT Darnell Dockett,220,22,A;Brodrick Bunkley,150,13,A;Travis Johnson,150,10;Letroy Guion,90,4;Odell Haggins,0,0
+LB Ernie Sims,250,8;A.J. Nicholson,250,4;Buster Davis,250,5;Lawrence Timmons,180,10;Kendyll Pope,230,5
+CB Antonio Cromartie,90,4;Stanford Samuels,180,8;Bryant McFadden,170,6;Tony Carter,160,6;Patrick Robinson,0,0
+S Myron Rolle,180,6;Pat Watkins,180,5;Jamie Robinson,200,4;Kendall Smith? ,0,0;Michael Ray Garvin? ,0,0`,
+10:`QB Jameis Winston,7964,65,H;EJ Manuel,7741,47;Deondre Francois,7000,40;Christian Ponder,2000,15;James Blackman,3000,20
+RB Dalvin Cook,4464,46,C;Devonta Freeman,2255,30;Chris Thompson,1500,10;Karlos Williams,1500,18;Cam Akers,2875,27
+WR Kelvin Benjamin,1500,20;Rashad Greene,3830,29;Rodney Smith,1400,12;Travis Rudolph,2300,16;Nyqwan Murray,1500,10
+TE Nick O'Leary,1591,15,H;Ryan Izzo,600,5;Kevin Haplea? ,0,0;Lloyd Thompson? ,0,0;Tre' McKitty,300,2
+DE Brian Burns,170,23,A;Bjoern Werner,100,21,C;Cornellius Carradine,100,13;Josh Sweat,150,16;Demarcus Walker,170,26,A
+DT Timmy Jernigan,140,7,A;Derrick Nnadi,160,11;Eddie Goldman,90,6;Marvin Wilson,120,7;Everett Dawkins,100,5
+LB Telvin Smith,200,4;Christian Jones,240,4;Terrance Smith,200,2;Nigel Bradham,250,5;Matthew Thomas,150,4
+CB Jalen Ramsey,180,4,A;Xavier Rhodes,120,8;Lamarcus Joyner,180,8,C;P.J. Williams,100,4;Ronald Darby,80,3
+S Derwin James,180,4,A;Lamarcus Joyner,0,0;Terrence Brooks,140,4;Nate Andrews,120,8;Tyler Hunter,100,4`,
+20:`QB Jordan Travis,9000,67;McKenzie Milton,500,4;Tate Rodemaker,600,6;DJ Uiagalelei,1100,4;James Blackman,0,0
+RB Trey Benson,1896,23;Treshaun Ward,1300,13;Jashaun Corbin,1500,15;Lawrance Toafili,1100,7;Lawrance? ,0,0
+WR Keon Coleman,658,11;Johnny Wilson,1600,7;Mycah Pittman,600,4;Ontaria Wilson,1100,5;Malik McClain,500,4
+TE Jaheim Bell,500,2;Camren McDonald,700,4;Markeston Douglas,100,2;Wyatt Rector,50,1;Kyle Morlock,100,2
+DE Jared Verse,90,18,A;Keir Thomas,90,10;Patrick Payton,90,13;Jermaine Johnson II,70,11,A;Fabien Lovett,60,4
+DT Robert Cooper,50,2;Joshua Farmer,60,3;Braden Fiske,50,6;Dennis Briggs,60,4;Malcolm Ray? ,0,0
+LB Tatum Bethune,200,3;Kalen DeLoach,200,9;Amari Gainer,150,4;Emmett Rice,50,1;Stephen Dix Jr.? ,0,0
+CB Renardo Green,90,1;Asante Samuel Jr.,80,4;Azareye'h Thomas,70,2;Omarion Cooper,60,2;Jarrian Jones,90,4
+S Akeem Dent,170,1;Jammie Robinson,180,4;Shyheim Brown,140,3;Hunter Washington,60,1;Jerrod Means? ,0,0`
+});
+T("Miami","ACC",{
+80:`QB Vinny Testaverde,6058,48,H;Bernie Kosar,5971,40;Jim Kelly,0,0;Steve Walsh,6000,48,A;Mark Richt,500,2
+RB Alonzo Highsmith,1400,13;Melvin Bratton,1800,25;Warren Williams,1600,11;Cleveland Gary,1100,10;Leonard Conley,900,7
+WR Michael Irvin,2423,26;Eddie Brown,1800,12;Brian Blades,1800,10;Brett Perriman,1500,10;Andre Brown,1100,8
+TE Glenn Dennison,800,6;Willie Smith,800,5;Rob Chudzinski,300,3;Alfredo Roberts,200,2;Charles? ,0,0
+DE Jerome Brown,0,0;Daniel Stubbs,170,39,C;Greg Mark,170,28,A;Bill Hawkins,150,15;Danny Stubbs,0,0
+DT Jerome Brown,180,21,C;Russell Maryland,0,0;Kevin Fagan,130,8;Cortez Kennedy,0,0;Tony Fitzpatrick? ,0,0
+LB George Mira Jr.,330,4;Winston Moss,200,6;Maurice Crum,0,0;Rod Carter,200,4;Jay Brophy,250,5,A
+CB Bennie Blades,0,0;Tolbert Bain,140,6;Selwyn Brown? ,0,0;Donald Ellis? ,0,0;Kenny Calhoun,120,5
+S Bennie Blades,250,19,H;Bubba McDowell,200,8;Fred Marion,200,13,A;Selwyn Brown,150,6;Darrell Fullington,150,8`,
+90:`QB Gino Torretta,7690,47,H;Craig Erickson,6627,46;Ken Dorsey,0,0;Ryan Clement,4500,28;Scott Covington? ,0,0
+RB Edgerrin James,2960,32,A;James Stewart? ,0,0;Stephen McGuire,1500,15;Larry Jones,1400,10;Danyell Ferguson,1300,10
+WR Lamar Thomas,2271,23;Horace Copeland,1600,13;Santana Moss,0,0;Reggie Wayne,0,0;Yatil Green,1600,13
+TE Kevin Williams? ,0,0;Mark Caesar? ,0,0;Bubba Franks,1000,12;Coleman Bell,500,4;Syii Tucker? ,0,0
+DE Kevin Patrick,150,14;Rusty Medearis,140,17;Kenny Holmes,150,15;Greg Mark,0,0;Ray Lewis,0,0
+DT Russell Maryland,220,20,H;Warren Sapp,170,19,H;Cortez Kennedy,140,11,A;Mark Caesar,100,6;Damione Lewis,0,0
+LB Ray Lewis,388,5,A;Micheal Barrow,350,11,C;Darrin Smith,300,7;Jessie Armstead,250,9;Dan Morgan,0,0
+CB Ryan McNeil,130,10,A;Carlton Williams? ,0,0;Duane Starks,120,6;Tremain Mack,120,6;Al Blades,0,0
+S Darryl Williams,200,12,A;Earl Little,0,0;Malcolm Pearson? ,0,0;Charlie Jones? ,0,0;Twan Russell? ,0,0`,
+0:`QB Ken Dorsey,9565,86,A;Kyle Wright,5900,46;Brock Berlin,4500,31;Jacory Harris,0,0;Kirby Freeman,1500,7
+RB Willis McGahee,2067,28,H;Clinton Portis,2523,20;Frank Gore,1975,17;Najeh Davenport,1600,22;Tyrone Moss,1000,10
+WR Andre Johnson,1831,20,C;Santana Moss,2546,19,C;Reggie Wayne,2510,20;Roscoe Parrish,1900,14;Lance Leggett,1300,10
+TE Kellen Winslow II,1365,9,H;Jeremy Shockey,1015,10,C;Greg Olsen,1215,7;Bubba Franks,700,8;Jimmy Graham,200,5
+DE Jerome McDougle,130,16,A;Calais Campbell,140,19;Vince Wilfork,0,0;Javon Nanton,80,6;Andrew Williams,100,8
+DT Vince Wilfork,145,11,A;William Joseph,150,11,A;Damione Lewis,140,13;Kareem Brown,100,4;Bryan Pata,100,5
+LB Jonathan Vilma,370,6,A;D.J. Williams,270,7,A;Dan Morgan,532,11,H;Jon Beason,200,4;Darryl Sharpton,140,4
+CB Antrel Rolle,170,7,C;Phillip Buchanon,140,10,A;Sean Taylor,0,0;Kelly Jennings,140,6;Mike Rumph,130,5
+S Ed Reed,190,21,C;Sean Taylor,198,14,C;Brandon Meriweather,250,6;Kenny Phillips,200,6;Maurice Sikes,100,4`,
+10:`QB Brad Kaaya,9968,69;Jacory Harris,8826,70;Stephen Morris,5000,38;N'Kosi Perry,2700,25;Malik Rosier,3500,26
+RB Duke Johnson,3519,22,A;Lamar Miller,1918,10;Mark Walton,2000,22;Travis Homer,2000,12;Joe Yearby,1500,13
+WR Allen Hurns,2400,13;Phillip Dorsett,1900,17;Stacy Coley,2200,21;Ahmmon Richards,1600,7;Travis Benjamin,1500,10
+TE David Njoku,1059,9;Clive Walford,1500,14;Brevin Jordan,1000,7;Chris Herndon,700,4;Will Mallory,600,4
+DE Olivier Vernon,90,6;Allen Bailey,130,19;Al-Quadin Muhammad,70,10;Joe Jackson,120,22;Jaelan Phillips,0,0
+DT Gerald Willis,90,4;RJ McIntosh,90,6;Kendrick Norton,80,4;Olsen Pierre,70,3;Anthony Chickillo,140,12
+LB Denzel Perryman,350,6,A;Shaquille Quarterman,356,14;Michael Pinckney,250,10;Sean Spence,300,8;Zach McCloud,150,3
+CB Ladarius Gunter? ,0,0;Tracy Howard,150,5;Artie Burns,100,8;Michael Jackson,100,3;Brandon McGee,120,3
+S Jaquan Johnson,280,7;Jamal Carter,170,2;Rayshawn Jenkins,180,5;Deon Bush,150,4;Sheldrick Redwine,150,4`,
+20:`QB Cam Ward,4313,39,A;D'Eriq King,3800,34;Tyler Van Dyke,7500,54;Carson Beck,3000,22;Emory Williams,500,4
+RB Henry Parrish Jr.,1100,9;Damien Martinez,1000,8;Don Chaney Jr.,600,6;Cam'Ron Harris,1000,10;Mark Fletcher Jr.,600,6
+WR Xavier Restrepo,2900,19;Charleston Rambo,1172,7;Jacolby George,900,10;Mike Harley,1500,6;Malachi Toney,0,0
+TE Brevin Jordan,576,7;Will Mallory,1000,5;Elijah Arroyo,700,7;Cam McCormick,200,2;Kahlil Spencer? ,0,0
+DE Rueben Bain Jr.,90,14,A;Jaelan Phillips,45,8,A;Quincy Roche,45,5;Akheem Mesidor,100,15;Gregory Rousseau,0,0
+DT Leonard Taylor III,80,6;Jahfari Harvey,50,4;Jared Harrison-Hunte,90,4;Branson Deen,40,2;Akheem Mesidor,0,0
+LB Wesley Bissainthe,180,4;Francisco Mauigoa,240,4;Corey Flagg Jr.,140,2;Bradley Jennings Jr.? ,0,0;Sam Brooks? ,0,0
+CB Tyrique Stevenson,90,3;Kam Kinchens,0,0;Te'Cory Couch,60,1;Al Blades Jr.,60,1;Daryl Porter Jr.,60,2
+S Kam Kinchens,170,8,A;Bubba Bolden,150,3;James Williams,150,4;Jaden Davis,40,1;Keionte Scott,60,2`
+});
+T("Colorado","Big 12",{
+80:`QB Darian Hagan,0,0;Sal Aunese,1100,6;Mark Hatcher,1500,8;Steve Vogel,1800,10;Jeff Duncan? ,0,0
+RB Eric Bieniemy,0,0;J.J. Flannigan,1500,20;O.C. Oliver,1200,11;Lee Rouson,1500,10;Anthony Davis? ,0,0
+WR Mike Pritchard,0,0;Walter Stanley,1000,6;Jeff Campbell,1000,5;Lance Carl,700,4;Ron Brown? ,0,0
+TE Jon Embree,1400,9;Dave? ,0,0;Sean Brown? ,0,0;Mark? ,0,0;Jim? ,0,0
+DE Alfred Williams,0,0;Kanavis McGhee,0,0;Arthur Walker? ,0,0;Bill Coleman? ,0,0;Erik? ,0,0
+DT Joe Garten? ,0,0;Okland Salavea? ,0,0;Laval Short? ,0,0;Mark? ,0,0;Jeff? ,0,0
+LB Michael Jones,350,6;Barry Remington,300,4;Don DeLuzio? ,0,0;Paul? ,0,0;Oliver? ,0,0
+CB Tyrone Byrd? ,0,0;Dave McCloughan,150,8;Bruce Taylor? ,0,0;Dwayne? ,0,0;Erik? ,0,0
+S Mickey Pruitt,250,6,A;Eric? ,0,0;Bruce? ,0,0;Dave? ,0,0;Ron? ,0,0`,
+90:`QB Kordell Stewart,6481,33;Koy Detmer,5390,40;Darian Hagan,3800,25;John Hessler,2500,15;Mike Moschetti,2800,22
+RB Rashaan Salaam,3057,33,H;Eric Bieniemy,3940,42,C;Herchell Troutman,1600,13;Lamont Warren,1600,16;Marlon Barnes? ,0,0
+WR Michael Westbrook,2548,19,C;Charles Johnson,2400,16;Rae Carruth,2500,22,A;Mike Pritchard,1400,10;James Kidd,1000,6
+TE Christian Fauria,1200,11;Sean Brown? ,0,0;Daniel Graham,0,0;Dwayne? ,0,0;Luke? ,0,0
+DE Alfred Williams,250,35,H;Kanavis McGhee,180,20,A;Ted Johnson,0,0;Greg Jones,140,10;Kerry Hicks? ,0,0
+DT Shannon Clavelle,140,8;Leonard Renfro,130,10;Rick? ,0,0;Brady McDonnell? ,0,0;Taivale Tuitama? ,0,0
+LB Matt Russell,350,6,H;Chad Brown,250,15;Ted Johnson,280,6;Greg Biekert,300,5;Jashon Sykes,200,4
+CB Chris Hudson,180,10,H;Deon Figures,150,10,H;Ben Kelly,120,8;Dwayne Davis? ,0,0;Rashidi? ,0,0
+S Tyrone Rodgers? ,0,0;Ryan Black? ,0,0;Victor Rogers? ,0,0;Steve Rosga? ,0,0;Dwayne? ,0,0`,
+0:`QB Joel Klatt,6694,36;Craig Ochs,3000,16;Robert Hodge,2000,12;Cody Hawkins,5000,37;Bernard Jackson,1500,10
+RB Chris Brown,2270,34;Bobby Purify,2900,23;Hugh Charles,2000,15;Rodney Stewart,0,0;Brian Lockridge? ,0,0
+WR Derek McCoy,1800,12;Scotty McKnight,0,0;Jeremy Bloom,1600,7;Josh Smith? ,0,0;Blake Mackey? ,0,0
+TE Daniel Graham,1200,10,H;Joe Klopfenstein,1300,10;Quinn Sypniewski,500,4;Patrick Devenny,400,5;Riar Geer,800,7
+DE Abraham Wright,90,17;Jordon Dizon,0,0;Tyler Brayton,130,10;Taylor Lassen? ,0,0;Maurice Lucas? ,0,0
+DT Brandon? ,0,0;Matt McChesney? ,0,0;George Hypolite,150,10;Brandon Nicolas? ,0,0;Lionel Dotson? ,0,0
+LB Jordon Dizon,401,6,C;Thaddaeus Washington,250,4;Jashon Sykes,0,0;Joe Sanders? ,0,0;Brian Iwuh,200,4
+CB Terrence Wheatley,140,8;Lorenzo Sims? ,0,0;Jimmy Smith,0,0;Gary Barnett? ,0,0;Benjamin Burney? ,0,0
+S Michael Lewis? ,0,0;J.J. Billingsley? ,0,0;Lionel Harris? ,0,0;Ryan Walters,180,4;Daniel Jones? ,0,0`,
+10:`QB Sefo Liufau,9568,60;Steven Montez,9649,64;Tyler Hansen,3000,16;Jordan Webb,1500,7;Cody Hawkins,0,0
+RB Rodney Stewart,3988,25;Phillip Lindsay,3707,36;Christian Powell,1800,13;Michael Adkins II,800,7;Travon McMillian,1000,6
+WR Paul Richardson,2412,21;Nelson Spruce,3347,23;Laviska Shenault Jr.,1943,10,A;Shay Fields,1700,14;Devin Ross,1000,5
+TE Nick Kasa,300,3;Kyle Slavin? ,0,0;Sean Irwin,300,3;Chris Bounds,0,0;Jake? ,0,0
+DE Derek McCartney,100,7;Jimmie Gilbert,100,13;Leo Lewis? ,0,0;Mustafa Johnson,100,13;Terrence Lee? ,0,0
+DT Josh Tupou,100,5;Will Pericak,180,15;Justin Solis,80,3;Jordan Carrell,80,2;Javier Edwards? ,0,0
+LB Addison Gillam,370,8;Kenneth Olugbode,300,3;Nate Landman,0,0;Rick Gamboa,150,1;Drew Lewis,150,3
+CB Chidobe Awuzie,240,11;Ahkello Witherspoon,90,3;Isaiah Oliver,90,4;Jimmy Smith,120,4;Greg Henderson,140,3
+S Tedric Thompson,200,8;Evan White? ,0,0;Ray Polk,150,2;Ryan Moeller? ,0,0;Afolabi Laguda,180,1`,
+20:`QB Shedeur Sanders,7364,64,A;Brendon Lewis,1500,7;Sam Noyer,1600,9;J.T. Shrout,800,5;Owen McCown,0,0
+RB Jarek Broussard,1900,13;Alex Fontenot,800,6;Deion Smith,600,2;Isaiah Augustave,300,1;Ashaad Clayton? ,0,0
+WR Travis Hunter,2179,20,H;Jimmy Horn Jr.,1000,5;LaJohntay Wester,1000,10;Xavier Weaver,700,3;Brenden Rice,0,0
+TE Brady Russell,500,2;Michael Harrison,100,1;Louis Passarello,50,1;Erik Olsen? ,0,0;Sav'ell Smalls? ,0,0
+DE Carson Wells,120,9;Terrance Lang,90,7;BJ Green II,40,5;Arden Walker,40,3;Jordan Domineck? ,0,0
+DT Taijh Alston? ,0,0;Chazz Wallace? ,0,0;Leonard Payne Jr.? ,0,0;Jaquan Sanders? ,0,0;Shane Cokes? ,0,0
+LB Nate Landman,358,6;LaVonta Bentley,140,2;Jackson Perry? ,0,0;Trevor Woods,140,2;Quincy Perry? ,0,0
+CB Travis Hunter,60,4,H;Mekhi Blackmon,100,4;Christian Gonzalez,60,1;Cormani McClain,30,1;Kyndrich Breedlove? ,0,0
+S Shilo Sanders,120,2;Isaiah Lewis,80,1;Mark Perry,140,2;Trevor? ,0,0;Cam Silmon-Craig,100,3`
+});
+T("Texas Tech","Big 12",{
+80:`QB Billy Joe Tolliver,6756,37;Aaron Keesee,2000,10;Jamie Gill? ,0,0;Ron Reeves,2900,15;Jim Hart? ,0,0
+RB James Gray,4066,44,A;Rodney Allison? ,0,0;Anthony Lynn? ,0,0;Freddie Wilson? ,0,0;Ron Lewis? ,0,0
+WR Wayne Walker? ,0,0;Tyrone Thurman,1100,4;Eddie Brown? ,0,0;Mark Lewis? ,0,0;Jerry? ,0,0
+TE Jimmy Gaines? ,0,0;Jerry Gray? ,0,0;Bob? ,0,0;Hal? ,0,0;Don? ,0,0
+DE Gabriel Rivera,0,0;Brad? ,0,0;Mark Carter? ,0,0;Johnny? ,0,0;Tim? ,0,0
+DT Gabriel Rivera,180,13,C;Ronnie? ,0,0;Rick? ,0,0;Tim? ,0,0;Todd? ,0,0
+LB Brian Jones? ,0,0;Terry? ,0,0;Jim? ,0,0;Johnny Holland? ,0,0;Mark? ,0,0
+CB Tim Brown? ,0,0;Brian? ,0,0;Marcus? ,0,0;Andre? ,0,0;Dennis? ,0,0
+S Tony? ,0,0;Kevin? ,0,0;Paul? ,0,0;Steve? ,0,0;Charlie? ,0,0`,
+90:`QB Zebbie Lethridge,5000,27;Robert Hall,4000,20;Rodney Blackshear? ,0,0;Kliff Kingsbury,0,0;Jamie Gill,3300,21
+RB Byron Hanspard,4219,41,H;Bam Morris,3500,30,A;Ricky Williams,3000,28;Sammy Morris,2000,22;Shaud Williams? ,0,0
+WR Lloyd Hill,2800,18;Derek Dorris? ,0,0;Donnie Hart,1500,10;Darrell Moore? ,0,0;Tim Winn? ,0,0
+TE Bryan? ,0,0;Mike? ,0,0;Cole? ,0,0;Matt? ,0,0;Chad? ,0,0
+DE Shawn Banks? ,0,0;Montae Reagor,180,25,A;Shaunard Harts? ,0,0;Stephen Gaines? ,0,0;Aaron? ,0,0
+DT Montae Reagor,0,0;Albert? ,0,0;Zach Thomas,0,0;Ryan? ,0,0;Barron Wortham? ,0,0
+LB Zach Thomas,390,10,C;Marcus Coleman? ,0,0;Ty Parten? ,0,0;Brian? ,0,0;Matt? ,0,0
+CB Marcus Coleman,150,8;Tony Darden? ,0,0;Dane Johnson? ,0,0;Kevin? ,0,0;Jeff? ,0,0
+S Dane Johnson? ,0,0;Kevin Curtis,0,0;Jason? ,0,0;Taylor Webb? ,0,0;Marcus? ,0,0`,
+0:`QB Kliff Kingsbury,12429,95,A;B.J. Symons,5976,52;Graham Harrell,15793,134,A;Cody Hodges,4238,31;Sonny Cumbie,4742,32
+RB Taurean Henderson,4120,58;Shaud Williams,2000,17;Baron Batch,1600,15;Ricky Williams,0,0;Shannon Woods,1600,17
+WR Michael Crabtree,3127,41,H;Wes Welker,3069,21,A;Danny Amendola,2246,15;Joel Filani,2900,32;Jarrett Hicks,3100,36
+TE Jace? ,0,0;Cole? ,0,0;Kyle? ,0,0;Brandon? ,0,0;Mike? ,0,0
+DE Brandon Williams,140,25;McKinner Dixon,80,10;Adell Duckett? ,0,0;Aaron Hunt? ,0,0;Keyunta Dawson,150,15
+DT Colby Whitlock,170,6;Rajon Henley? ,0,0;Chris Hudler? ,0,0;Ryan? ,0,0;Lonnie? ,0,0
+LB Ryan Aycock? ,0,0;Joe Garcia? ,0,0;Brian Duncan? ,0,0;Paul Williams? ,0,0;Marlon Williams,250,4
+CB Darcel McBath,180,8;Jamar Wall,170,7;Joshua Garrett? ,0,0;Chris Parker? ,0,0;Antonio Huffman? ,0,0
+S Kevin Curtis,350,10,A;Daniel Charbonnet,200,8;Darcel McBath,0,0;Dwayne Slay,200,6;Joe? ,0,0`,
+10:`QB Patrick Mahomes,11252,93,H;Seth Doege,9000,70;Davis Webb,5500,46;Baker Mayfield,2315,12;Alan Bowman,4500,30
+RB DeAndre Washington,3500,30;SaDale Foster,1000,7;Kenny Williams,1500,17;Justin Stockton,1600,15;Eric Stephens,1500,15
+WR Jakeem Grant,3286,27;Eric Ward,3000,30;Antoine Wesley,1400,9;Keke Coutee,2400,17;Jace Amaro,0,0
+TE Jace Amaro,2205,13,C;Kyle? ,0,0;Travis Bolin? ,0,0;Jordan Davis? ,0,0;Dylan Cantrell,0,0
+DE Breiden Fehoko,100,8;Pete Robertson,150,19;Kerry Hyder,170,17;Branden Jackson,150,12;Eli Howard,80,6
+DT Kerry Hyder,0,0;Delvon Simmons? ,0,0;Rika Levi? ,0,0;Nigel Bowden? ,0,0;Mychealon Thomas,80,4
+LB Dakota Allen,300,6;Jordyn Brooks,370,6,A;Will Smith? ,0,0;Sam Eguavoen? ,0,0;Micah Awe,250,4
+CB Justis Nelson,140,4;Nigel Bethel II? ,0,0;Douglas Coleman III,100,9;D.J. Polite-Bray? ,0,0;Tevin? ,0,0
+S Keenon Ward,150,3;J.J. Gaines,150,5;Jah'Shawn Johnson,250,7;Adrian Frye,90,4;Cody Davis,350,4`,
+20:`QB Tyler Shough,4000,32;Behren Morton,6000,49;Donovan Smith,2000,14;Henry Colombi,2000,15;Alan Bowman,0,0
+RB Tahj Brooks,4560,47,A;SaRodorick Thompson,2600,32;Xavier White,600,4;Cam'Ron Valdez,300,4;Bryson? ,0,0
+WR Josh Kelly,1500,10;Jerand Bradley,1000,7;Myles Price,1000,5;Erik Ezukanma,1800,12;Caleb Douglas,0,0
+TE Jalin Conyers,600,7;Mason Tharp,300,4;Baylor Cupp,100,1;Travis Koontz,200,2;Jake? ,0,0
+DE Tyree Wilson,100,14;Jacob Rodriguez,0,0;Myles Cole,40,4;Isaiah Bigby? ,0,0;David Bailey,60,14
+DT Jaylon Hutchings,120,5;Tony Bradford Jr.,60,3;Vernon Broughton? ,0,0;Jaylon? ,0,0;A.J. Holmes,30,2
+LB Krishon Merriweather,200,5;Colin Schooler,200,3;Jacob Rodriguez,200,4,A;Bryce Ramirez,100,3;Ben Roberts? ,0,0
+CB Rayshad Williams,100,3;Malik Dunlap,80,3;Adonis Otey,70,2;Bryce Robinson? ,0,0;Tyler? ,0,0
+S Marcus Ward,60,1;C.J. Baskerville,100,2;Reggie Pearson Jr.,100,4;Dadrion Taylor-Demerson,180,6;Tyler Owens,90,1`
+});
+T("Notre Dame","Independent",{
+80:`QB Tony Rice,4231,29;Steve Beuerlein,6527,27;Blair Kiel,4300,18;Terry Andrysiak,1200,5;Tony Lewis? ,0,0
+RB Allen Pinkett,4131,49,A;Tim Brown,0,0;Mark Green,1900,16;Ricky Watters,0,0;Tony Brooks,2000,12
+WR Tim Brown,2493,12,H;Raghib Ismail,0,0;Joe Howard,1300,7;Tony Hunter,1300,8;Pat Eilers? ,0,0
+TE Mark Bavaro,600,2;Tony Hunter,0,0;Derek Brown,0,0;Frank Jacobs? ,0,0;Mike Gann? ,0,0
+DE Bob Golic? ,0,0;Mike Gann,150,15;Frank Stams,150,16,A;Wally Kleine,150,10;Eric Dorsey,150,8
+DT Chris Zorich,0,0;Jeff Alm,0,0;Wally Kleine? ,0,0;Mike Kovaleski? ,0,0;Mike? ,0,0
+LB Michael Stonebreaker,300,6,C;Ned Bolcar,300,4;Wes Pritchett,200,3;Bob Crable,521,7,C;Tony Furjanic,300,4
+CB Todd Lyght,0,0;Stan Smagala,120,4;D'Juan Francisco? ,0,0;Troy Wilson? ,0,0;Dave Duerson? ,0,0
+S Pat Terrell,180,6;George Streeter,180,6;Steve Lawrence? ,0,0;Joe Johnson? ,0,0;Dave Duerson,250,12,A`,
+90:`QB Rick Mirer,5997,41;Ron Powlus,7602,52;Jarious Jackson,4000,25;Kevin McDougal,1800,12;Tony Rice,0,0
+RB Jerome Bettis,1929,27;Ricky Watters,2300,20;Reggie Brooks,2109,20;Autry Denson,4318,43;Randy Kinder,2000,16
+WR Raghib Ismail,1565,10,C;Derrick Mayes,2512,22;Lake Dawson,1500,13;Malcolm Johnson,1300,6;Bobby Brown,1000,5
+TE Derek Brown,600,4;Irv Smith,700,6;Pete Chryplewicz,400,4;Jabari Holloway,500,6;Oscar McBride? ,0,0
+DE Renaldo Wynn,150,10;Bryant Young,0,0;Bertrand Berry,150,14;Kory Minor,0,0;Anthony Peterson? ,0,0
+DT Chris Zorich,220,10,C;Bryant Young,180,13,A;Jim Flanigan,150,8;Paul Grasmanis? ,0,0;Melvin Dansby? ,0,0
+LB Justin Goheen? ,0,0;Lyron Cobbins,280,4;Kory Minor,250,15;Demetrius DuBose,300,7;Michael Stonebreaker,0,0
+CB Todd Lyght,180,11,C;Bobby Taylor,140,6,A;Allen Rossum,110,6;Shawn Wooden,140,5;Tom Carter,120,9
+S Jeff Burris,200,10,C;Brian Magee? ,0,0;Benny Guilbeaux? ,0,0;Deke Cooper,200,5;Ivory Covington? ,0,0`,
+0:`QB Brady Quinn,11762,95,A;Jimmy Clausen,7000,60;Carlyle Holiday,3500,18;Arnaz Battle,0,0;Evan Sharpley,700,6
+RB Darius Walker,3249,21;Julius Jones,3018,26;Ryan Grant,2200,18;Armando Allen,2400,9;Tony Fisher,1500,12
+WR Jeff Samardzija,2593,27,C;Maurice Stovall,1700,18;Golden Tate,2707,26,H;Michael Floyd,0,0;Rhema McKnight,2000,20
+TE Anthony Fasano,1000,6;John Carlson,1100,7;Kyle Rudolph,1000,9;Jabari Holloway,500,6;Gary Godsey,300,2
+DE Justin Tuck,150,24;Victor Abiamiri,140,16;Kerry Neal,100,6;Ethan Johnson,0,0;Trevor Laws,0,0
+DT Trevor Laws,200,8;Derek Landri,140,7;Darrell Campbell? ,0,0;Ian Williams,0,0;Pat Kuntz,100,4
+LB Brandon Hoyte,280,6;Maurice Crum Jr.,300,4;Courtney Watson,350,4;Brian Smith,200,8;Corey Mays,200,4
+CB Shane Walton,150,10,C;Vontez Duff,150,6;Ambrose Wooden,130,4;Darrin Walls,100,3;Terrail Lambert,120,4
+S Tom Zbikowski,300,8,A;Gerome Sapp,200,4;Glenn Earl,150,4;David Bruton,220,6;Kyle McCarthy,250,8`,
+10:`QB Ian Book,8948,72;Everett Golson,5850,41;DeShone Kizer,5805,47;Brandon Wimbush,2500,16;Tommy Rees,4000,32
+RB Josh Adams,3201,20;Cierre Wood,2000,15;Tony Jones Jr.,1500,12;Theo Riddick,1500,7;Dexter Williams,1100,15
+WR Michael Floyd,3686,37,A;Will Fuller,2512,30,A;TJ Jones,2400,20;Chase Claypool,2100,19;Miles Boykin,1200,10
+TE Tyler Eifert,2000,11,H;Cole Kmet,700,6;Troy Niklas,500,5;Alize Mack,500,3;Durham Smythe,400,5
+DE Isaac Rochell,160,6;Khalid Kareem,150,13;Julian Okwara,100,14;Daelin Hayes,100,5;Romeo Okwara,100,13
+DT Jerry Tillery,150,15;Sheldon Day,170,10;Louis Nix III,150,5;Stephon Tuitt,0,0;Kurt Hinish,60,3
+LB Jaylon Smith,284,6,H;Manti Te'o,437,9,H;Te'von Coney,320,6;Drue Tranquill,300,5;Joe Schmidt,200,2
+CB Julian Love,180,5,A;Troy Pride Jr.,120,4;KeiVarae Russell,180,4;Bennett Jackson,150,6;Cole Luke,140,5
+S Harrison Smith,250,8;Alohi Gilman,200,4;Jalen Elliott,200,7;Max Redfield,150,1;Elijah Shumate,170,2`,
+20:`QB Riley Leonard,2900,20;Sam Hartman,2689,24;Ian Book,2830,15;Jack Coan,3150,25;Drew Pyne,2000,22
+RB Kyren Williams,2600,27;Audric Estime,2300,25;Jeremiyah Love,1900,23;Logan Diggs,0,0;Chris Tyree,1200,8
+WR Kevin Austin Jr.,900,6;Javon McKinley,700,3;Braden Lenzy,1300,11;Jayden Thomas,800,6;Jaden Greathouse,700,5
+TE Michael Mayer,2099,18,C;Mitchell Evans,400,4;Tommy Tremble,200,1;Kevin Bauman,100,2;Eli Raridon,200,2
+DE Isaiah Foskey,140,26;Rylie Mills,100,12;Javontae Jean-Baptiste,50,5;Adetokunbo Ogundeji,60,8;Jordan Botelho,60,6
+DT Howard Cross III,110,5;Jayson Ademilola,80,4;Kurt Hinish,70,3;Jacob Lacey,40,2;Jordan Botelho,0,0
+LB Jeremiah Owusu-Koramoah,130,5,H;JD Bertrand,250,4;Drew White,170,2;Jack Kiser,240,4;Marist Liufau,100,5
+CB Benjamin Morrison,90,9,A;Cam Hart,90,2;Clarence Lewis,100,2;TaRiq Bracy,80,2;Christian Gray,70,3
+S Kyle Hamilton,148,8,C;Xavier Watts,150,13,H;Brandon Joseph,60,3;DJ Brown,130,2;Ramon Henderson,60,2`
+});
+
+</script>
+<script>
+const DEC_KEYS=[[80,'1980s'],[90,'1990s'],[0,'2000s'],[10,'2010s'],[20,'2020s']];
+const POS=['QB','RB','WR','TE','DE','DT','LB','CB','S'];
+const POS_NAME={QB:'Quarterbacks',RB:'Running backs',WR:'Wide receivers',TE:'Tight ends',DE:'Defensive ends',DT:'Defensive tackles',LB:'Linebackers',CB:'Cornerbacks',S:'Safeties'};
+const STAT={QB:['yds','TD'],RB:['yds','TD'],WR:['yds','TD'],TE:['yds','TD'],DE:['tkl','sk'],DT:['tkl','sk'],LB:['tkl','sk'],CB:['tkl','INT'],S:['tkl','INT']};
+const HONOR={H:'AWARD',C:'CONSENSUS AA',A:'ALL-AMER'};
+// cap1, cap2, weight1, weight2  (career totals at the school)
+const CAP={QB:[12000,100,18,10],RB:[4500,50,16,12],WR:[3200,32,16,12],TE:[1600,16,16,12],DE:[250,30,9,19],DT:[220,16,14,14],LB:[400,16,18,10],CB:[200,16,9,19],S:[300,14,10,18]};
+function rate(p){const c=CAP[p.pos];const r=58+c[2]*Math.sqrt(Math.min(1,p.a/c[0]))+c[3]*Math.sqrt(Math.min(1,p.b/c[1]))+({H:16,C:11,A:6}[p.h]||0);return Math.min(99,Math.round(r))}
+
+const DB={}; // DB[team][decLabel][pos] = [players]
+let uid=0;
+for(const t of TEAMS){
+  DB[t.name]={};
+  for(const [k,label] of DEC_KEYS){
+    const txt=t.raw[k]; if(!txt) continue;
+    const byPos={}; let count=0;
+    for(const line of txt.split('\n')){
+      const sp=line.indexOf(' '); const pos=line.slice(0,sp).trim(); if(!POS.includes(pos)) continue;
+      const seen=new Set(); byPos[pos]=[];
+      for(const chunk of line.slice(sp+1).split(';')){
+        const f=chunk.split(','); const name=(f[0]||'').trim(); const a=+f[1]||0, b=+f[2]||0, h=(f[3]||'').trim();
+        if(!name||name.includes('?')||(a===0&&b===0)||seen.has(name)) continue;
+        seen.add(name);
+        const p={id:++uid,name,pos,a,b,h,team:t.name,conf:t.conf,dec:label}; p.ovr=rate(p);
+        byPos[pos].push(p); count++;
+      }
+    }
+    if(count>=15) DB[t.name][label]=byPos; // skip program-decades too thin to draft from
+  }
+}
+const CONFS=['SEC','Big Ten','ACC','Big 12','Independent'];
+const teamsIn=c=>TEAMS.filter(t=>t.conf===c&&Object.keys(DB[t.name]).length).map(t=>t.name);
+const decadesFor=team=>Object.keys(DB[team]);
+
+const SLOTS=[
+ {id:'QB',lbl:'QB',side:'O',pos:['QB'],w:.25},
+ {id:'RB1',lbl:'RB',side:'O',pos:['RB'],w:.10},{id:'RB2',lbl:'RB',side:'O',pos:['RB'],w:.10},
+ {id:'TE',lbl:'TE',side:'O',pos:['TE'],w:.08},{id:'WR',lbl:'WR',side:'O',pos:['WR'],w:.12},
+ {id:'OF1',lbl:'FLEX',side:'O',pos:['RB','WR','TE'],w:.12},{id:'OF2',lbl:'FLEX',side:'O',pos:['RB','WR','TE'],w:.12},{id:'OF3',lbl:'FLEX',side:'O',pos:['RB','WR','TE'],w:.11},
+ {id:'DE1',lbl:'DE',side:'D',pos:['DE'],w:.10},{id:'DE2',lbl:'DE',side:'D',pos:['DE'],w:.10},{id:'DT',lbl:'DT',side:'D',pos:['DT'],w:.10},
+ {id:'LB1',lbl:'LB',side:'D',pos:['LB'],w:.09},{id:'LB2',lbl:'LB',side:'D',pos:['LB'],w:.09},
+ {id:'CB1',lbl:'CB',side:'D',pos:['CB'],w:.09},{id:'CB2',lbl:'CB',side:'D',pos:['CB'],w:.09},
+ {id:'S1',lbl:'S',side:'D',pos:['S'],w:.08},{id:'S2',lbl:'S',side:'D',pos:['S'],w:.08},
+ {id:'DF1',lbl:'FLEX',side:'D',pos:['DE','DT','LB','CB','S'],w:.09},{id:'DF2',lbl:'FLEX',side:'D',pos:['DE','DT','LB','CB','S'],w:.09}
+];
+
+/* ---------- state ---------- */
+const REROLLS=5;
+let S=null;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function newGame(mode){
+  S={mode,phase:'draft',roster:{},rr:{conf:REROLLS,team:REROLLS,dec:REROLLS},spin:null,openId:null,spinning:{}};
+  spinAll(false);
+}
+const unlimited=()=>S.mode==='natty';
+const openSlotsFor=pos=>SLOTS.filter(s=>!S.roster[s.id]&&s.pos.includes(pos));
+const onRoster=name=>Object.values(S.roster).some(p=>p.name===name);
+function pickable(spin){const lists=DB[spin.team][spin.dec];return POS.some(pos=>(lists[pos]||[]).some(p=>!onRoster(p.name))&&openSlotsFor(pos).length)}
+
+function rollConf(){return pick(CONFS.filter(c=>teamsIn(c).length))}
+function rollTeam(conf,avoid){const opts=teamsIn(conf);const o=opts.length>1?opts.filter(t=>t!==avoid):opts;return pick(o)}
+function rollDec(team,avoid){const opts=decadesFor(team);const o=opts.length>1?opts.filter(d=>d!==avoid):opts;return pick(o)}
+
+function spinAll(animate=true){
+  let s,tries=0;
+  do{const conf=rollConf();const team=rollTeam(conf);s={conf,team,dec:rollDec(team)};tries++}while(!pickable(s)&&tries<200);
+  S.spin=s;S.openId=null;
+  animateReels(['conf','team','dec'],animate);
+}
+function reroll(which){
+  if(!unlimited()){ if(S.rr[which]<=0) return; S.rr[which]--; }
+  const s={...S.spin};
+  if(which==='conf'){
+    const others=CONFS.filter(c=>c!==s.conf&&teamsIn(c).length);
+    s.conf=pick(others); s.team=rollTeam(s.conf); s.dec=decadesFor(s.team).includes(s.dec)?s.dec:rollDec(s.team);
+  } else if(which==='team'){
+    s.team=rollTeam(s.conf,s.team); if(!decadesFor(s.team).includes(s.dec)) s.dec=rollDec(s.team);
+  } else s.dec=rollDec(s.team,s.dec);
+  S.spin=s;S.openId=null;
+  const reels= which==='conf'?['conf','team']:[which];
+  if(!decadesFor(s.team).includes(S.spin.dec)) reels.push('dec');
+  animateReels(reels,true);
+  if(!pickable(s)) toast('Nobody here fits an open slot. Reroll again'+(unlimited()?'.':' or spin past it.'));
+}
+
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animateReels(keys,animate){
+  if(!animate||reduce){render();return}
+  keys.forEach(k=>S.spinning[k]=true); render();
+  const pools={conf:CONFS,team:TEAMS.map(t=>t.name),dec:DEC_KEYS.map(d=>d[1])};
+  keys.forEach((k,i)=>{
+    const el=document.getElementById('reel-'+k); let n=0; const stop=7+i*4;
+    const iv=setInterval(()=>{ if(el) el.textContent=pick(pools[k]); if(++n>=stop){clearInterval(iv);S.spinning[k]=false;if(keys.every(x=>!S.spinning[x]))render(); else if(el){el.textContent=label(k);el.classList.remove('spinning')}}},70);
+  });
+}
+const label=k=>k==='dec'?S.spin.dec:S.spin[k];
+
+function draftPlayer(pid,slotId){
+  const lists=DB[S.spin.team][S.spin.dec]; let p=null;
+  for(const pos of POS) for(const x of (lists[pos]||[])) if(x.id===pid) p=x;
+  if(!p||S.roster[slotId]) return;
+  S.roster[slotId]=p;
+  if(Object.keys(S.roster).length===SLOTS.length){S.openId=null;render();return}
+  if(S.mode==='classic') spinAll(true); else {S.openId=null;render()}
+}
+function release(slotId){delete S.roster[slotId];render()}
+
+/* ---------- sim ---------- */
+const CUPCAKE=['Kent State','Akron','UMass','New Mexico State','Charlotte','Georgia State','UTEP','Ball State','Bowling Green','Louisiana-Monroe'];
+const MID=['Iowa','Wisconsin','Kansas State','Utah','Ole Miss','Arkansas','Virginia Tech','Louisville','Baylor','TCU','Washington','UCLA','Missouri','Kentucky','Michigan State','Oklahoma State','South Carolina','Texas A&M','Arizona State','Pitt'];
+const ELITE=['Alabama','Georgia','Ohio State','Michigan','Texas','LSU','Clemson','Oregon','USC','Notre Dame','Florida State','Penn State','Miami','Oklahoma'];
+function ratings(){
+  const side=sd=>{let s=0,w=0;for(const sl of SLOTS.filter(x=>x.side===sd)){s+=S.roster[sl.id].ovr*sl.w;w+=sl.w}return s/w};
+  const o=side('O'),d=side('D');return {off:o,def:d,ovr:o*.55+d*.45};
+}
+const winP=(us,them)=>1/(1+Math.exp(-(us-them)/2.9));
+function score(win,margin){const base=win?20+Math.round(Math.random()*24):10+Math.round(Math.random()*17);const m=Math.max(1,Math.round(margin));return win?[base+m,base]:[base,base+m]}
+function simulate(){
+  const R=ratings();
+  const opp=[...shuffle(CUPCAKE).slice(0,3).map(n=>({n,r:63+Math.random()*9})),...shuffle(MID).slice(0,5).map(n=>({n,r:75+Math.random()*9})),...shuffle(ELITE).slice(0,4).map(n=>({n,r:84+Math.random()*7}))];
+  const sched=shuffle(opp); const games=[]; let w=0;
+  for(const g of sched){const p=winP(R.ovr+(Math.random()*4-2),g.r);const win=Math.random()<p;if(win)w++;games.push({...g,win,sc:score(win,Math.abs(R.ovr-g.r)/2+Math.random()*10)})}
+  let bowl;
+  if(w>=11){const o={n:pick(ELITE),r:89+Math.random()*5};const win=Math.random()<winP(R.ovr,o.r);bowl={...o,win,title:true,sc:score(win,2+Math.random()*12)}}
+  else {const o={n:pick(MID),r:76+Math.random()*8};const win=Math.random()<winP(R.ovr,o.r);bowl={...o,win,title:false,sc:score(win,3+Math.random()*12)}}
+  return {R,games,w,bowl};
+}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function letter(x){return x>=95?'A+':x>=92?'A':x>=89?'A-':x>=86?'B+':x>=83?'B':x>=80?'B-':x>=77?'C+':x>=74?'C':x>=70?'C-':'D'}
+
+/* ---------- saved runs ---------- */
+const KEY='gridiron120-best';
+function loadBest(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+function saveRun(run){try{const b=loadBest();b.push(run);b.sort((x,y)=>(y.w+(y.natty?1:0))-(x.w+(x.natty?1:0))||y.ovr-x.ovr);localStorage.setItem(KEY,JSON.stringify(b.slice(0,10)))}catch(e){}}
+
+/* ---------- render ---------- */
+const app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function header(){
+  const m=S?S.mode:null;
+  return `<header class="top"><div><div class="eyebrow">College football · 1980s to today</div><h1>12<b>-</b>0 Gridiron Draft</h1></div>
+  <div class="hdr-right">${m?`<span class="chip on">${m==='classic'?'Classic':'Natty or Bust'}</span><button class="btn ghost" data-act="home">Quit to menu</button>`:''}</div></header>`;
+}
+function home(){
+  const best=loadBest();
+  const tc=TEAMS.length, dc=TEAMS.reduce((n,t)=>n+decadesFor(t.name).length,0);
+  app.innerHTML=header()+`
+  <div class="modes">
+    <button class="mode" data-act="start" data-mode="classic"><span class="eyebrow">Mode 1</span><h2>Classic</h2>
+      <p>Spin conference, program and decade. Draft one player per spin. Five rerolls on each wheel for the whole draft, so spend them wisely.</p><span class="go">Kick off →</span></button>
+    <button class="mode" data-act="start" data-mode="natty"><span class="eyebrow">Mode 2</span><h2>Natty or Bust</h2>
+      <p>Same wheels, no limits. Reroll as often as you like, cut players you've drafted, and hand-build the best roster the pool allows.</p><span class="go">Build the dream →</span></button>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>How a season plays</h3><ol class="rules">
+      <li><b>19 picks.</b> Offense: QB, 2 RB, TE, WR, 3 FLEX (RB/WR/TE). Defense: 2 DE, DT, 2 LB, 2 CB, 2 S, 2 FLEX (any defender).</li>
+      <li><b>Stats show, ratings don't.</b> You see each player's career numbers at that school and his honors. Overall ratings reveal after the season.</li>
+      <li><b>12 games, then a bowl.</b> Finish 11-1 or better and you play for the national title. Run the table and win it for a perfect 13-0.</li>
+    </ol></div>
+    <div class="card"><h3>Best runs on this device</h3>${best.length?`<ul class="best">${best.map(b=>`<li><span class="rec">${b.w}-${12-b.w}</span><span class="meta">${b.natty?'🏆 National champs · ':''}${esc(b.mode)} · OVR ${b.ovr.toFixed(1)} · QB ${esc(b.qb)}</span><span class="tag">${esc(b.date)}</span></li>`).join('')}</ul>`:`<p class="empty">No seasons yet. Your top ten records will show up here.</p>`}</div>
+  </div>
+  <footer>${tc} programs, ${dc} program-decades, top five per position. Stats are approximate career totals at that school, compiled for this game; some older program-decades have shorter lists, and a few too thin to draft from are left off the wheel.</footer>`;
+}
+function reelHTML(k,name){
+  const n=S.rr[k];const un=unlimited();
+  return `<div class="reel"><div class="eyebrow">${name}</div><div class="window ${S.spinning[k]?'spinning':''}" id="reel-${k}">${esc(label(k))}</div>
+  <button class="reroll" data-act="reroll" data-w="${k}" ${(!un&&n<=0)||Object.values(S.spinning).some(Boolean)?'disabled':''} aria-label="Reroll ${name}">↻ Reroll ${un?'<span class="n">∞</span>':`<span class="pips">${[0,1,2,3,4].map(i=>`<i class="pip ${i<REROLLS-n?'used':''}"></i>`).join('')}</span>`}</button></div>`;
+}
+function draftView(){
+  const filled=Object.keys(S.roster).length, done=filled===SLOTS.length;
+  const lists=DB[S.spin.team][S.spin.dec];
+  const groups=POS.map(pos=>{
+    const ps=lists[pos]||[]; const open=openSlotsFor(pos);
+    const rows=ps.length?ps.map(p=>{
+      const taken=onRoster(p.name); const dis=taken||!open.length||done;
+      const isOpen=S.openId===p.id&&!dis;
+      return `<div class="prow ${isOpen?'open':''} ${dis?'dis':''}" ${dis?'aria-disabled="true"':'role="button" tabindex="0" data-act="sel" data-id="'+p.id+'"'}>
+        <span class="pname">${esc(p.name)}${p.h?`<span class="badge ${p.h}">${HONOR[p.h]}</span>`:''}</span>
+        <span class="pstats"><b>${p.a.toLocaleString()}</b> ${STAT[pos][0]} · <b>${p.b}</b> ${STAT[pos][1]}${taken?' · on roster':''}</span>
+        ${isOpen?`<span class="slotpick"><span class="lbl">Put him at</span>${open.map(s=>`<button class="slotbtn" data-act="draft" data-id="${p.id}" data-slot="${s.id}">${s.lbl}</button>`).join('')}</span>`:''}
+      </div>`}).join(''):`<span class="tag">No players listed for this decade.</span>`;
+    return `<div class="posgroup ${open.length?'':'closed'}"><div class="gh"><span>${POS_NAME[pos]}</span><span class="tag">${open.length?open.length+' open slot'+(open.length>1?'s':''):'filled'}</span></div>${rows}</div>`;
+  }).join('');
+  const side=sd=>SLOTS.filter(s=>s.side===sd).map(s=>{const p=S.roster[s.id];
+    return p?`<div class="slot"><span class="sl">${s.lbl}</span><span class="who">${esc(p.name)}<small>${p.pos} · ${esc(p.team)} ${p.dec}</small></span>${unlimited()?`<button class="x" data-act="cut" data-slot="${s.id}" aria-label="Cut ${esc(p.name)}">×</button>`:'<span></span>'}</div>`
+      :`<div class="slot emptyslot"><span class="sl">${s.lbl}</span><span class="who tag">${s.pos.join(' / ')}</span><span></span></div>`}).join('');
+  app.innerHTML=header()+`
+  <section class="board" aria-label="Spinner">
+    <div class="board-top"><span class="eyebrow">Pick ${Math.min(filled+1,SLOTS.length)} of ${SLOTS.length}</span>
+      <span class="note">${unlimited()?'Unlimited rerolls · tap × to cut a player':'Rerolling conference also re-spins the program'}</span></div>
+    <div class="reels">${reelHTML('conf','Conference')}${reelHTML('team','Program')}${reelHTML('dec','Decade')}</div>
+    ${unlimited()?`<button class="btn" data-act="spinall">Spin all three</button>`:(!pickable(S.spin)&&filled<SLOTS.length?`<button class="btn" data-act="spinall">Nobody fits. Spin again (free)</button>`:'')}
+  </section>
+  <div class="draft">
+    <section class="depth"><div class="depth-head"><h2>${esc(S.spin.team)} · ${S.spin.dec}</h2><span class="tag">Tap a player, then a slot</span></div>${groups}</section>
+    <aside class="roster"><div class="depth-head"><h2>Your roster</h2><span class="tag mono">${filled}/${SLOTS.length}</span></div>
+      <div class="progress"><i style="width:${filled/SLOTS.length*100}%"></i></div>
+      ${done?`<button class="btn primary" data-act="sim">Simulate the season</button>`:''}
+      <div class="side"><h3>Offense</h3><div class="slots">${side('O')}</div></div>
+      <div class="side"><h3>Defense</h3><div class="slots">${side('D')}</div></div>
+    </aside>
+  </div>`;
+}
+function resultsView(){
+  const r=S.result, R=r.R, b=r.bowl, perfect=r.w===12&&b.title&&b.win;
+  const total=r.w+(b.win?1:0), losses=12-r.w+(b.win?0:1);
+  let head,sub;
+  if(perfect){head='Perfect season. National champions.';sub='You ran the table and won the title game. That is the whole goal.'}
+  else if(b.title&&b.win){head='National champions';sub=`One slip in the regular season, but you won it all. Not quite 13-0.`}
+  else if(b.title){head='Lost the title game';sub=`${r.w}-${12-r.w} got you to the national championship, where ${esc(b.n)} beat you.`}
+  else {head=r.w>=9?'Good year, no title shot':'Rebuilding year';sub=`You needed 11 wins to play for the title. ${b.win?'At least you won the bowl.':'And the bowl game got away too.'}`}
+  const list=[...r.games.map((g,i)=>({...g,wk:'W'+(i+1)})),{...b,wk:b.title?'NC':'BWL'}];
+  const rosterRows=sd=>SLOTS.filter(s=>s.side===sd).map(s=>{const p=S.roster[s.id];return `<div class="slot"><span class="sl">${s.lbl}</span><span class="who">${esc(p.name)}<small>${p.pos} · ${esc(p.team)} ${p.dec}</small></span><span class="ov">${p.ovr}</span></div>`}).join('');
+  app.innerHTML=header()+`
+  <section class="hero"><div class="record">${total}-${losses}</div><div class="verdict"><div class="eyebrow">${S.mode==='classic'?'Classic':'Natty or Bust'} · final record incl. bowl</div><h2>${head}</h2><p>${sub}</p></div></section>
+  <div class="grades">
+    <div class="grade"><div class="eyebrow">Offense</div><div class="g">${letter(R.off)}</div><div class="n">${R.off.toFixed(1)}</div></div>
+    <div class="grade"><div class="eyebrow">Defense</div><div class="g">${letter(R.def)}</div><div class="n">${R.def.toFixed(1)}</div></div>
+    <div class="grade"><div class="eyebrow">Team</div><div class="g" style="color:var(--amber)">${letter(R.ovr)}</div><div class="n">${R.ovr.toFixed(1)} OVR</div></div>
+  </div>
+  <section class="card"><h3>Schedule</h3><ul class="games">${list.map((g,i)=>`<li class="${g.win?'W':'L'} ${g.wk==='NC'?'title':''}" style="animation-delay:${i*60}ms"><span class="wk">${g.wk}</span><span>${g.wk==='NC'?'National Championship vs ':g.wk==='BWL'?'Bowl vs ':''}${esc(g.n)}</span><span><span class="r">${g.win?'W':'L'}</span><span class="sc">${g.sc[0]}-${g.sc[1]}</span></span></li>`).join('')}</ul></section>
+  <div class="grid2"><section class="card"><h3>Offense · ratings revealed</h3><div class="slots">${rosterRows('O')}</div></section>
+  <section class="card"><h3>Defense · ratings revealed</h3><div class="slots">${rosterRows('D')}</div></section></div>
+  <div class="actions"><button class="btn primary" data-act="resim">Replay this season</button><button class="btn" data-act="start" data-mode="${S.mode}">New draft</button><button class="btn ghost" data-act="home">Menu</button></div>`;
+}
+function render(){ if(!S) return home(); if(S.phase==='results') return resultsView(); draftView(); }
+
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+
+function runSeason(save){
+  S.result=simulate();S.phase='results';
+  if(save){const R=S.result.R;saveRun({w:S.result.w,natty:S.result.bowl.title&&S.result.bowl.win,ovr:R.ovr,mode:S.mode==='classic'?'Classic':'Natty or Bust',qb:S.roster.QB.name,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})})}
+  render();window.scrollTo({top:0});
+}
+app.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return; const a=el.dataset.act;
+  if(a==='home'){S=null;render()}
+  else if(a==='start'){newGame(el.dataset.mode);window.scrollTo({top:0})}
+  else if(a==='reroll') reroll(el.dataset.w);
+  else if(a==='spinall'){spinAll(true)}
+  else if(a==='sel'){const id=+el.dataset.id;S.openId=S.openId===id?null:id;render()}
+  else if(a==='draft'){e.stopPropagation();draftPlayer(+el.dataset.id,el.dataset.slot)}
+  else if(a==='cut') release(el.dataset.slot);
+  else if(a==='sim') runSeason(true);
+  else if(a==='resim') runSeason(false);
+});
+app.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('prow')&&e.target.dataset.act){e.preventDefault();e.target.click()}});
+render();
+</script>
+
+</body>
+</html>
