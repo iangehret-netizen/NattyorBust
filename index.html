@@ -24,7 +24,7 @@
 }
 *{box-sizing:border-box}
 html,body{background:var(--night);color:var(--text)}
-html.fixed,html.fixed body{height:100%;overflow:hidden}
+html.fixed,html.fixed body{height:100%}
 body{font-family:var(--body);font-size:15px;line-height:1.4;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
@@ -77,7 +77,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .rr:disabled{opacity:.35;cursor:not-allowed}
 
 /* stage: field + sheet */
-.stage{position:relative;flex:1;min-height:0;margin-top:10px}
+.stage{position:relative;flex:1 0 auto;min-height:max(560px,calc(100% - 230px));margin-top:10px}
+@media (min-width:480px){.stage{min-height:max(620px,calc(100% - 230px))}.jer{width:58px}}
 .field{position:absolute;inset:0 0 92px 0}
 .turf{position:absolute;inset:0;clip-path:polygon(10% 0,90% 0,100% 100%,0 100%);
   background:repeating-linear-gradient(0deg,transparent 0 calc(10% - 2px),rgba(255,255,255,.16) calc(10% - 2px) 10%),
