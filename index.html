@@ -67,6 +67,16 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .strip{position:absolute;left:0;right:0;top:0;will-change:transform}
 .item{height:52px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;color:var(--reel-ink);font-size:clamp(22px,7vw,36px);line-height:1;white-space:nowrap;letter-spacing:.01em}
 .item.q{font-size:38px}
+.reels.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dials{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px}
+.dial{height:40px;border-radius:9px;border:1.5px solid rgba(255,255,255,.4);background:linear-gradient(#22327a,#101a46);font-family:var(--display);font-weight:800;font-size:18px;min-width:0}
+.dial.on{background:linear-gradient(#2a5bd8,#12309a);border-color:#9cc2ff;box-shadow:0 0 12px rgba(47,125,255,.6)}
+.dial:disabled{opacity:.6}
+.jer.cur .ring{border-color:var(--gold);box-shadow:0 0 12px var(--gold);animation:pulse 1.2s ease-in-out infinite}
+.jer.cur .pl{color:var(--gold)}
+@keyframes pulse{50%{transform:scale(1.18)}}
+.modebtn.gold span{border-color:#ffe8a8;background:linear-gradient(#f7c94a,#c98b0b);box-shadow:0 0 18px rgba(242,181,38,.5),0 5px 0 #6b4a05}
+.modebtn.gold b,.modebtn.gold small{color:#2a1a00}
 .rerolls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
 .rr{display:flex;align-items:center;justify-content:center;gap:5px;height:40px;border-radius:9px;border:1.5px solid rgba(255,255,255,.55);font-family:var(--display);font-weight:800;font-size:clamp(13px,3.9vw,17px);letter-spacing:.02em;min-width:0;padding:0 6px;white-space:nowrap;overflow:hidden}
 .rr svg{width:16px;height:16px;flex:none}
@@ -1215,7 +1225,12 @@ const SLOTS=[
 /* ---------- state ---------- */
 const REROLLS=5;let S=null;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const unlimited=()=>S&&S.mode==='natty';
+const unlimited=()=>S&&(S.mode==='natty'||S.mode==='free');
+const isFree=()=>S&&S.mode==='free';
+const MODE_NAME={classic:'Classic',natty:'Natty or Bust',free:'Free Play'};
+const FREE_ORDER=['QB','RB1','RB2','WR','TE','OF1','OF2','OF3','DE1','DE2','DT','LB1','LB2','CB1','CB2','S1','S2','DF1','DF2'];
+const slotById=id=>SLOTS.find(x=>x.id===id);
+const nextEmpty=()=>FREE_ORDER.find(id=>!S.roster[id])||null;
 const openSlotsFor=pos=>SLOTS.filter(s=>!S.roster[s.id]&&s.pos.includes(pos));
 const onRoster=name=>Object.values(S.roster).some(p=>p.name===name);
 const filledCount=()=>Object.keys(S.roster).length;
@@ -1227,8 +1242,8 @@ function freshSpin(){let s,n=0;do{const conf=pick(CONFS.filter(c=>teamsIn(c).len
 /* ---------- reels ---------- */
 const IH=52,WH=78;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const reelText={conf:sp=>CONF_SHORT[sp.conf],team:sp=>TEAMINFO[sp.team][0],dec:sp=>DEC_SHORT[sp.dec]};
-const reelPool={conf:()=>Object.values(CONF_SHORT),team:()=>Object.values(TEAMINFO).map(t=>t[0]),dec:()=>DEC_KEYS.map(d=>d[2])};
+const reelText={conf:sp=>CONF_SHORT[sp.conf],team:sp=>TEAMINFO[sp.team][0],dec:sp=>DEC_SHORT[sp.dec],pos:sp=>sp.pos};
+const reelPool={pos:()=>['QB','RB','WR','TE','FLEX','DE','DT','LB','CB','S'],conf:()=>Object.values(CONF_SHORT),team:()=>Object.values(TEAMINFO).map(t=>t[0]),dec:()=>DEC_KEYS.map(d=>d[2])};
 const off=i=>(WH-IH)/2-i*IH;
 function setReel(key,text,isQ){
   const strip=document.getElementById('strip-'+key);if(!strip)return;
@@ -1264,12 +1279,19 @@ async function runSpin(keys,sp,durs){
 /* ---------- actions ---------- */
 function newGame(mode){
   S={mode,roster:{},rr:{conf:REROLLS,team:REROLLS,dec:REROLLS},spin:null,busy:false,sheet:false,filter:'ALL',q:''};
-  lastShown={conf:'?',team:'?',dec:'?'};
+  lastShown={conf:'?',team:'?',dec:'?',pos:'?'};
+  if(mode==='free'){S.cur='QB';S.freeDec='2020s'}
   buildDraft();
+  if(mode==='free'){runSpin(['pos','dec'],{pos:'QB',dec:S.freeDec},[900,1300])}
 }
+function freeSpinState(){return {pos:slotById(S.cur).lbl,dec:S.freeDec}}
+async function setFreeSlot(id){if(S.busy||!id||S.cur===id&&lastShown.pos===slotById(id).lbl){S.cur=id||S.cur;updateJerseys();updateControls();return}S.cur=id;updateJerseys();await runSpin(['pos'],freeSpinState(),[900]);if(S.sheet)renderSheet()}
+async function setFreeDec(dec){if(S.busy||dec===S.freeDec)return;S.freeDec=dec;S.q='';updateControls();await runSpin(['dec'],freeSpinState(),[1100]);if(S.sheet)renderSheet()}
+function freePool(){const sl=slotById(S.cur);const out=[];for(const t of TEAMS){const L=DB[t.name][S.freeDec];if(!L)continue;for(const pos of sl.pos)for(const p of (L[pos]||[]))out.push(p)}return out}
 async function doDraft(){
   if(S.busy)return;
   if(filledCount()===SLOTS.length){runSeason(true);return}
+  if(isFree()){S.filter='ALL';S.q='';openSheet();return}
   if(S.spin){openSheet();return}
   S.spin=freshSpin();S.filter='ALL';S.q='';
   await runSpin(['conf','team','dec'],S.spin,[1300,1900,2500]);
@@ -1291,6 +1313,7 @@ async function reroll(which){
 }
 function choosePlayer(id){
   const p=findPlayer(id);if(!p)return;
+  if(isFree()){if(onRoster(p.name))return;return place(p,S.cur)}
   const open=openSlotsFor(p.pos);if(!open.length)return;
   const uniq=[...new Map(open.map(s=>[s.lbl,s])).values()];
   if(uniq.length===1)return place(p,uniq[0].id);
@@ -1298,15 +1321,17 @@ function choosePlayer(id){
 }
 function place(p,slotId){
   closeModal();S.roster[slotId]=p;S.spin=null;
-  closeSheet();updateHeader();updateJerseys(slotId);updateControls();
+  if(isFree()){const nx=nextEmpty();closeSheet();updateJerseys(slotId);if(nx){S.cur=nx;runSpin(['pos'],freeSpinState(),[900])}updateControls()}
+  else{closeSheet();updateHeader();updateJerseys(slotId);updateControls()}
   if(filledCount()===SLOTS.length)setTimeout(()=>toast('Roster complete. Time to play the season.'),500);
 }
 function tapJersey(slotId){
-  if(S.busy||S.sheet)return;const p=S.roster[slotId];if(!p)return;
+  if(S.busy||S.sheet)return;const p=S.roster[slotId];
+  if(!p){if(isFree())setFreeSlot(slotId);return}
   if(unlimited())modal(`<h3>Cut ${esc(p.name)}?</h3><p>${p.pos} · ${esc(p.team)} ${DEC_SHORT[p.dec]}</p><div class="mrow"><button class="mbtn danger" data-act="cut" data-slot="${slotId}">Cut him</button><button class="mbtn alt" data-act="closemodal">Keep</button></div>`);
   else toast(`${p.name} · ${p.pos} · ${p.team} ${DEC_SHORT[p.dec]}`);
 }
-function cut(slotId){delete S.roster[slotId];closeModal();updateHeader();updateJerseys();updateControls()}
+function cut(slotId){delete S.roster[slotId];closeModal();if(isFree()){setFreeSlot(slotId)}updateHeader();updateJerseys();updateControls()}
 
 /* ---------- sim ---------- */
 const CUPCAKE=['Kent State','Akron','UMass','New Mexico State','Charlotte','Georgia State','UTEP','Ball State','Bowling Green','Louisiana-Monroe'];
@@ -1360,6 +1385,7 @@ function menu(){
    <div class="hero">${ICON.trophy}<h1>12<em>-</em>0<br>Gridiron</h1><p>College football · 1980s to today</p></div>
    <button class="modebtn" data-act="start" data-mode="classic"><span><b>Classic</b><small>Spin conference, program and era. One pick per spin, five rerolls on each wheel.</small></span></button>
    <button class="modebtn red" data-act="start" data-mode="natty"><span><b>Natty or Bust</b><small>Unlimited rerolls. Cut and replace anyone. Build the perfect roster.</small></span></button>
+   <button class="modebtn gold" data-act="start" data-mode="free"><span><b>Free Play</b><small>Go position by position. Pick the era and choose from every player at that spot.</small></span></button>
    <div class="panel"><h2>Best runs</h2>${best.length?`<ul class="best">${best.map(b=>`<li><span class="rec ${b.natty?'champ':''}">${b.w+(b.bw?1:0)}-${12-b.w+(b.bw?0:1)}</span><span class="meta">${b.natty?'🏆 Champs · ':''}${esc(b.mode)} · ${b.ovr.toFixed(1)} OVR · ${esc(b.qb)}</span><span class="dt">${esc(b.date)}</span></li>`).join('')}</ul>`:`<p style="margin:0;color:var(--muted)">No seasons yet. Your top ten finishes land here.</p>`}</div>
    <div class="panel"><h2>How it works</h2><ol class="rules">
      <li>Tap <b>Draft</b> to spin conference, program and era, then pick one player from that roster.</li>
@@ -1378,7 +1404,9 @@ function buildDraft(){
       <div class="coin" title="Rerolls left"><div class="c">${ICON.ball}</div><div class="n" id="coin"></div></div><span></span></div>
     <div class="round" id="round"></div>
     <div class="segs" id="segs" style="grid-template-columns:repeat(${SLOTS.length},1fr)"></div>
-    <div class="reels">${frame('conf','r','CONF')}${frame('team','n','TEAM')}${frame('dec','b','ERA')}</div>
+    ${isFree()?`<div class="reels two">${frame('pos','r','POSITION')}${frame('dec','b','ERA')}</div>
+    <div class="dials" id="dials">${DEC_KEYS.map(d=>`<button class="dial" data-act="dial" data-dec="${d[1]}">${d[2]}</button>`).join('')}</div>`:
+    `<div class="reels">${frame('conf','r','CONF')}${frame('team','n','TEAM')}${frame('dec','b','ERA')}</div>`}
     <div class="rerolls" id="rerolls" hidden>
       <button class="rr r" data-act="reroll" data-w="conf">${ICON.spin}<span>CONF</span><span class="k" id="k-conf"></span></button>
       <button class="rr n" data-act="reroll" data-w="team">${ICON.spin}<span>TEAM</span><span class="k" id="k-team"></span></button>
@@ -1392,33 +1420,36 @@ function buildDraft(){
           <div class="filters"><input class="search" id="search" placeholder="Search..." autocomplete="off"><div id="chips" style="display:contents"></div></div></div>
         <div class="list" id="list"></div></div>
     </div></div>`;
-  ['conf','team','dec'].forEach(k=>setReel(k,'?',true));
+  (isFree()?['pos','dec']:['conf','team','dec']).forEach(k=>setReel(k,'?',true));
   updateHeader();updateJerseys();updateControls();
   document.getElementById('search').addEventListener('input',e=>{S.q=e.target.value;renderList()});
 }
 function updateHeader(){
   const f=filledCount();
-  document.getElementById('round').textContent=`Round ${Math.min(f+1,SLOTS.length)} / ${SLOTS.length} · ${S.mode==='classic'?'Classic':'Natty or Bust'}`;
+  document.getElementById('round').textContent=isFree()?`Picking ${S.cur?slotById(S.cur).lbl:''} · ${f} / ${SLOTS.length} · Free Play`:`Round ${Math.min(f+1,SLOTS.length)} / ${SLOTS.length} · ${MODE_NAME[S.mode]}`;
   document.getElementById('segs').innerHTML=SLOTS.map((_,i)=>`<i class="${i<f+(S.spin?1:0)?'on':''}"></i>`).join('');
   const left=S.rr.conf+S.rr.team+S.rr.dec;document.getElementById('coin').textContent=unlimited()?'∞':left;
   ['conf','team','dec'].forEach(k=>document.getElementById('k-'+k).textContent=unlimited()?'∞':S.rr[k]);
 }
 function updateJerseys(popId){
   document.getElementById('jerseys').innerHTML=SLOTS.map(s=>{const p=S.roster[s.id];
-    return `<div class="jer ${p?'filled':'empty'} ${s.id===popId?'pop':''}" style="left:${s.x}%;top:${s.y}%" ${p?`data-act="jersey" data-slot="${s.id}" role="button" tabindex="0" aria-label="${esc(p.name)}"`:''}>${jerseySVG(p)}<div class="ring"></div><div class="pl">${p?esc(p.name.split(' ').slice(-1)[0]).toUpperCase():s.lbl}</div></div>`}).join('');
+    const tap=p||isFree();const cur=isFree()&&S.cur===s.id&&!p;
+    return `<div class="jer ${p?'filled':'empty'} ${cur?'cur':''} ${s.id===popId?'pop':''}" style="left:${s.x}%;top:${s.y}%" ${tap?`data-act="jersey" data-slot="${s.id}" role="button" tabindex="0" aria-label="${p?esc(p.name):'Pick '+s.lbl}"`:''}>${jerseySVG(p)}<div class="ring"></div><div class="pl">${p?esc(p.name.split(' ').slice(-1)[0]).toUpperCase():s.lbl}</div></div>`}).join('');
 }
 function updateControls(){
   const btn=document.getElementById('draftbtn');if(!btn)return;
   const done=filledCount()===SLOTS.length;
-  btn.classList.toggle('gold',done);document.getElementById('draftlbl').textContent=done?'PLAY SEASON':(S.spin&&!S.sheet&&!S.busy)?'PICK':'DRAFT';
+  btn.classList.toggle('gold',done);document.getElementById('draftlbl').textContent=done?'PLAY SEASON':isFree()?'PICK '+slotById(S.cur).lbl:(S.spin&&!S.sheet&&!S.busy)?'PICK':'DRAFT';
   btn.disabled=S.busy;
-  const rr=document.getElementById('rerolls');rr.hidden=!S.spin;
+  document.querySelectorAll('#dials .dial').forEach(b=>{b.classList.toggle('on',b.dataset.dec===S.freeDec);b.disabled=S.busy});
+  const rr=document.getElementById('rerolls');rr.hidden=isFree()||!S.spin;
   rr.querySelectorAll('.rr').forEach(b=>b.disabled=S.busy||(!unlimited()&&S.rr[b.dataset.w]<=0));
   updateHeader();
 }
 function openSheet(){renderSheet();S.sheet=true;const sh=document.getElementById('sheet');sh.classList.add('open');sh.setAttribute('aria-hidden','false');updateControls()}
 function closeSheet(keepSpin){S.sheet=false;const sh=document.getElementById('sheet');if(!sh)return;sh.classList.remove('open');sh.setAttribute('aria-hidden','true');if(!keepSpin)updateControls()}
 function renderSheet(){
+  if(isFree())return renderFreeSheet();
   if(!S.spin)return;
   document.getElementById('shtitle').textContent=`${S.spin.team} • ${DEC_SHORT[S.spin.dec]}`;
   document.getElementById('search').value=S.q;
@@ -1426,7 +1457,26 @@ function renderSheet(){
   document.getElementById('chips').innerHTML=['ALL',...POS].map(p=>`<button class="fchip ${S.filter===p?'on':''} ${p!=='ALL'&&!(L[p]||[]).length?'zero':''}" data-act="filter" data-f="${p}">${p}</button>`).join('');
   renderList();
 }
+function renderFreeSheet(){
+  const sl=slotById(S.cur);
+  document.getElementById('shtitle').textContent=`${sl.lbl==='FLEX'?(sl.side==='O'?'Offensive':'Defensive')+' flex':sl.lbl+'s'} • ${DEC_SHORT[S.freeDec]}`;
+  document.getElementById('search').value=S.q;
+  const opts=sl.pos.length>1?['ALL',...sl.pos]:['ALL',...CONFS];
+  if(!opts.includes(S.filter))S.filter='ALL';
+  document.getElementById('chips').innerHTML=opts.map(o=>`<button class="fchip ${S.filter===o?'on':''}" data-act="filter" data-f="${o}">${CONF_SHORT[o]||o}</button>`).join('');
+  renderList();
+}
+function renderFreeList(){
+  const q=S.q.trim().toLowerCase();
+  const ps=freePool().filter(p=>(S.filter==='ALL'||p.pos===S.filter||p.conf===S.filter)&&(!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q)));
+  const rows=ps.map(p=>{const taken=onRoster(p.name);
+    return `<button class="pc" data-act="choose" data-id="${p.id}" ${taken?'disabled':''}><span class="pos">${p.pos}</span>
+      <span class="nm">${esc(p.name)}<small class="${taken||!p.h?'gray':''}">${esc(p.team.toUpperCase())}${taken?' · ON YOUR ROSTER':p.h?' · '+HONOR[p.h]:''}</small></span>
+      <span class="sts"><span>${STAT[p.pos][0]}</span><span>${STAT[p.pos][1]}</span><b>${p.a.toLocaleString()}</b><b>${p.b}</b></span></button>`}).join('');
+  document.getElementById('list').innerHTML=`<p class="none" style="padding:0 4px 4px;text-align:left">${ps.length} players</p>`+(rows||`<p class="none">No players match.</p>`);
+}
 function renderList(){
+  if(isFree())return renderFreeList();
   const L=DB[S.spin.team][S.spin.dec];const q=S.q.trim().toLowerCase();
   const rows=[];
   for(const pos of POS){if(S.filter!=='ALL'&&S.filter!==pos)continue;
@@ -1443,7 +1493,7 @@ function resultsView(save){
   setFixed(false);closeModal();
   const r=simulate();S.result=r;const R=r.R,b=r.bowl;
   const total=r.w+(b.win?1:0),losses=12-r.w+(b.win?0:1),perfect=r.w===12&&b.title&&b.win,champ=b.title&&b.win;
-  if(save)saveRun({w:r.w,bw:b.win,natty:champ,ovr:R.ovr,mode:S.mode==='classic'?'Classic':'Natty or Bust',qb:S.roster.QB.name,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})});
+  if(save)saveRun({w:r.w,bw:b.win,natty:champ,ovr:R.ovr,mode:MODE_NAME[S.mode],qb:S.roster.QB.name,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})});
   let head,sub;
   if(perfect){head='Perfect season. National champions!';sub='13-0. You ran the table and won the title game.'}
   else if(champ){head='National champions';sub='One slip in the regular season, but you won it all.'}
@@ -1458,7 +1508,7 @@ function resultsView(save){
    <div class="panel"><h2>Schedule</h2><ul class="games" id="games">${list.map(g=>`<li class="${g.win?'W':'L'} ${g.wk==='NC'?'nc':''}" hidden><span class="wk">${g.wk}</span><span class="op">${g.wk==='NC'?'Title game vs ':g.wk==='BOWL'?'Bowl vs ':''}${esc(g.n)}</span><span class="r">${g.win?'W':'L'}<i>${g.sc[0]}-${g.sc[1]}</i></span></li>`).join('')}</ul></div>
    <div class="panel"><h2>Ratings revealed</h2><div class="roster-rev">${rev}</div></div>
    <div class="actions"><button class="modebtn" data-act="resim"><span><b>Replay season</b><small>Same roster, new schedule. Not saved to best runs.</small></span></button>
-   <button class="modebtn red" data-act="start" data-mode="${S.mode}"><span><b>New draft</b><small>${S.mode==='classic'?'Classic':'Natty or Bust'}</small></span></button>
+   <button class="modebtn red" data-act="start" data-mode="${S.mode}"><span><b>New draft</b><small>${MODE_NAME[S.mode]}</small></span></button>
    <button class="textbtn" data-act="quit">Main menu</button></div></div>`;
   window.scrollTo({top:0});
   const lis=[...document.querySelectorAll('#games li')];let W=0,Lo=0,i=0;const rec=document.getElementById('bigrec');
@@ -1489,6 +1539,7 @@ document.addEventListener('click',e=>{
   else if(a==='jersey')tapJersey(el.dataset.slot);
   else if(a==='cut')cut(el.dataset.slot);
   else if(a==='closemodal')closeModal();
+  else if(a==='dial')setFreeDec(el.dataset.dec);
   else if(a==='resim')runSeason(false);
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.act==='jersey'){e.preventDefault();e.target.click()}});
